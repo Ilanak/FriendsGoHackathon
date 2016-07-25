@@ -2,9 +2,11 @@
 using System.Linq;
 using System.Threading.Tasks;
 using System.Net;
+using GoogleApi.Entities.Common;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Newtonsoft.Json;
+using Shared;
 
 namespace DocDbUtils
 {
@@ -41,9 +43,14 @@ namespace DocDbUtils
         {
             this.client = new DocumentClient(new Uri(EndpointUri), PrimaryKey);
             //await this.CreateDatabaseIfNotExists("Users");
-            //await this.CreateDocumentCollectionIfNotExists("FriendsGo", "Users");
-            //await this.CreateDocumentCollectionIfNotExists("FriendsGo", "Groups");
-            
+            //await this.CreateDocumentCollectionIfNotExistsAsync("FriendsGo", "Users");
+            //await this.CreateDocumentCollectionIfNotExistsAsync("FriendsGo", "Groups");
+
+            //var user = new BotUser("testUser");
+            var group = new Group(new Location(0,0));
+            //await this.CreateBotUserDocumentIfNotExistsAsync("FriendsGo", "Users", user);
+            await this.CreateBotGroupDocumentIfNotExistsAsync("FriendsGo", "Groups", group);
+
         }
 
         private void WriteToConsoleAndPromptToContinue(string format, params object[] args)
@@ -76,7 +83,7 @@ namespace DocDbUtils
             }
         }
 
-        private async Task CreateDocumentCollectionIfNotExists(string databaseName, string collectionName)
+        private async Task CreateDocumentCollectionIfNotExistsAsync(string databaseName, string collectionName)
         {
             try
             {
@@ -109,19 +116,40 @@ namespace DocDbUtils
             }
         }
 
-        private async Task CreateBotUserDocumentIfNotExists(string databaseName, string collectionName, BotUser user)
+        public async Task CreateBotUserDocumentIfNotExistsAsync(string databaseName, string collectionName, BotUser user)
         {
             try
             {
-                await this.client.ReadDocumentAsync(UriFactory.CreateDocumentUri(databaseName, collectionName, family.Id));
-                this.WriteToConsoleAndPromptToContinue("Found {0}", family.Id);
+                await this.client.ReadDocumentAsync(UriFactory.CreateDocumentUri(databaseName, collectionName, user.Id.ToString()));
+                this.WriteToConsoleAndPromptToContinue("Found {0}", user.Id);
             }
             catch (DocumentClientException de)
             {
                 if (de.StatusCode == HttpStatusCode.NotFound)
                 {
-                    await this.client.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(databaseName, collectionName), family);
-                    this.WriteToConsoleAndPromptToContinue("Created Family {0}", family.Id);
+                    await this.client.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(databaseName, collectionName), user);
+                    this.WriteToConsoleAndPromptToContinue("Created User {0}", user.Id);
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
+
+        public async Task CreateBotGroupDocumentIfNotExistsAsync(string databaseName, string collectionName, Group group)
+        {
+            try
+            {
+                await this.client.ReadDocumentAsync(UriFactory.CreateDocumentUri(databaseName, collectionName, group.Id.ToString()));
+                this.WriteToConsoleAndPromptToContinue("Found {0}", group.Id);
+            }
+            catch (DocumentClientException de)
+            {
+                if (de.StatusCode == HttpStatusCode.NotFound)
+                {
+                    await this.client.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(databaseName, collectionName), group);
+                    this.WriteToConsoleAndPromptToContinue("Created User {0}", group.Id);
                 }
                 else
                 {
