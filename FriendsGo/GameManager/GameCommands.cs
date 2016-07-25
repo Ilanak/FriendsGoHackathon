@@ -10,9 +10,9 @@ namespace GameManager
 
         string GetMission(string groupId);
 
-        void CheckIn(string groupId, string userId, Location location);
+        void CheckIn(string groupId, string userId, double latitude, double longitude);
 
-        bool IsGroupExists(string groupId);
+        void Stat(string groupId);
     }
 
     public class GameCommands : IGameCommands
@@ -37,7 +37,12 @@ namespace GameManager
             throw new System.NotImplementedException();
         }
 
-        public void CheckIn(string groupId, string userId, Location location)
+        public void CheckIn(string groupId, string userId, double latitude, double longitude)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void Stat(string groupId)
         {
             throw new System.NotImplementedException();
         }

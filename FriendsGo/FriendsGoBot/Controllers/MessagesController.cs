@@ -7,12 +7,17 @@ using System.Web.Http;
 using System.Web.Http.Description;
 using Microsoft.Bot.Connector;
 using Newtonsoft.Json;
+using GameManager;
 
 namespace FriendsGoBot
 {
+    
+
     [BotAuthentication]
     public class MessagesController : ApiController
     {
+       
+        static GameCommands manager = new GameCommands();
         /// <summary>
         /// POST: api/Messages
         /// Receive a message from a user and reply to it
@@ -28,26 +33,22 @@ namespace FriendsGoBot
                     //this is a command
                     if (activity.Text.Equals("/join"))
                     {
-                        Activity reply = activity.CreateReply($"join group!");
-                        await connector.Conversations.ReplyToActivityAsync(reply);
+                        manager.JoinGame(activity.ChannelId, activity.From.Id);
                     }
                     //this is a command
                     if (activity.Text.Equals("/challenge"))
                     {
-                        Activity reply = activity.CreateReply($"challenge");
-                        await connector.Conversations.ReplyToActivityAsync(reply);
+                        manager.GetMission(activity.ChannelId);
                     }
                     //this is a command
                     if (activity.Text.Equals("/checkin"))
                     {
-                        Activity reply = activity.CreateReply($"checkin");
-                        await connector.Conversations.ReplyToActivityAsync(reply);
+                        manager.CheckIn(activity.ChannelId, activity.From.Id, 23.6754, 25.45345);
                     }
                     //this is a command
                     if (activity.Text.Equals("/stat"))
                     {
-                        Activity reply = activity.CreateReply($"stat");
-                        await connector.Conversations.ReplyToActivityAsync(reply);
+                        manager.Stat(activity.ChannelId);
                     }
                 }
             }
