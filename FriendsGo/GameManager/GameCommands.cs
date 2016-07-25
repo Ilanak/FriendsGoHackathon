@@ -11,10 +11,17 @@ namespace GameManager
         string GetMission(string groupId);
 
         void CheckIn(string groupId, string userId, Location location);
+
+        bool IsGroupExists(string groupId);
     }
 
     public class GameCommands : IGameCommands
     {
+        public bool IsGroupExists(string groupId)
+        {
+            return true;
+        }
+
         public void JoinGame(string groupId, string userId)
         {
             throw new System.NotImplementedException();

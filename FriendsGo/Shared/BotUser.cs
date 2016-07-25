@@ -5,14 +5,12 @@ namespace Shared
 {
     public class BotUser
     {
+        public string Id { get; private set; }
         public string UserName { get; set; }
-        public Guid Id { get; private set; }
-        public string FullName { get; set; }
 
-        public BotUser(string name)
+        public BotUser(string id)
         {
-            Id = Guid.NewGuid();
-            UserName = name;
+            Id = id;
         }
     }
 }

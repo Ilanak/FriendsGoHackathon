@@ -1,27 +1,26 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Net;
-using GoogleApi.Entities.Common;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
-using Newtonsoft.Json;
 using Shared;
 
 namespace DocDbUtils
 {
-    class Program
+    public class DocDbApi
     {
         private const string EndpointUri = "https://friendsgodocdb.documents.azure.com:443/";
         private const string PrimaryKey = "uiEW7oMq9HaaLGkyyoolxm2MIdtbUsi3YBzUb97nAdss2OPlGDU24nsbrxzfeGy2Oze3ve0CuFKS3yeqjLEjwA==";
         private DocumentClient client;
 
-        static void Main(string[] args)
+        public async void InitDocDbConnection()
         {
             try
             {
-                Program p = new Program();
-                p.GetStartedDemo().Wait();
+                DocDbApi p = new DocDbApi();
+                this.client = new DocumentClient(new Uri(EndpointUri), PrimaryKey);
+
+
             }
             catch (DocumentClientException de)
             {
@@ -41,15 +40,15 @@ namespace DocDbUtils
         }
         private async Task GetStartedDemo()
         {
-            this.client = new DocumentClient(new Uri(EndpointUri), PrimaryKey);
+            
             //await this.CreateDatabaseIfNotExists("Users");
             //await this.CreateDocumentCollectionIfNotExistsAsync("FriendsGo", "Users");
             //await this.CreateDocumentCollectionIfNotExistsAsync("FriendsGo", "Groups");
 
             //var user = new BotUser("testUser");
-            var group = new Group(new Location(0,0));
+            //var group = new Group(new Location(0,0));
             //await this.CreateBotUserDocumentIfNotExistsAsync("FriendsGo", "Users", user);
-            await this.CreateBotGroupDocumentIfNotExistsAsync("FriendsGo", "Groups", group);
+            //await this.CreateBotGroupDocumentIfNotExistsAsync("FriendsGo", "Groups", group);
 
         }
 
