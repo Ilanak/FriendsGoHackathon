@@ -28,7 +28,7 @@ namespace MissionController
         {
             var mission = new Mission();
 
-            var submission = SubMissionsFactory.Create(SubMissionType.ExactLocation, level);
+            var submission = SubMissionsFactory.Create(SubMissionType.ExactLocation, level, startLocation);
             
             mission.SubMissions.Add(submission);
 
