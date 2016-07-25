@@ -19,7 +19,7 @@ namespace MissionController
 
     public static class SubMissionsFactory
     {
-        public static SubMission Create(SubMissionType type, int level)
+        public static SubMission Create(SubMissionType type, int level, Location startLocation)
         {
             switch (type)
             {
@@ -46,6 +46,7 @@ namespace MissionController
         public ExactLocationSubMission(int level)
         {
             NumberOfPlayers = level;
+            
             // ExactLocation = 
             Duration = TimeSpan.MaxValue;
         }
