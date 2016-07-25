@@ -68,7 +68,6 @@
     <Compile Include="IMissionController.cs" />
     <Compile Include="Location.cs" />
     <Compile Include="Mission.cs" />
-    <Compile Include="MissionBuilder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FriendsGoBot", "FriendsGoBo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MissionController", "MissionController\MissionController.csproj", "{731DC626-8881-4597-B4B6-4442360C8729}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\UnitTests.csproj", "{48E8404C-32EB-410A-A08A-A02CC2217553}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{731DC626-8881-4597-B4B6-4442360C8729}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{731DC626-8881-4597-B4B6-4442360C8729}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{731DC626-8881-4597-B4B6-4442360C8729}.Release|Any CPU.Build.0 = Release|Any CPU
+		{48E8404C-32EB-410A-A08A-A02CC2217553}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{48E8404C-32EB-410A-A08A-A02CC2217553}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{48E8404C-32EB-410A-A08A-A02CC2217553}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{48E8404C-32EB-410A-A08A-A02CC2217553}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
