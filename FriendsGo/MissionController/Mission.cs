@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using GoogleApi;
 using GoogleApi.Entities.Common;
+using GoogleApi.Entities.Places.Search.Common.Enums;
 using GoogleApi.Entities.Places.Search.NearBy.Request;
-using GoogleApi.Entities.Places.Search.NearBy.Response;
-using GoogleApi.Entities.Places.Search.Radar.Request;
-using GoogleApi.Entities.Places.Search.Radar.Response;
 
 namespace MissionController
 {
@@ -37,7 +33,8 @@ namespace MissionController
     }
 
     public abstract class SubMission
-    {        
+    {
+        protected const string ApiKey = "AIzaSyA5t84tAgn_fgRCXM1ROaOjcEfRiMG4AZ8";
     }
 
     public class ExactLocationSubMission : SubMission
@@ -52,17 +49,22 @@ namespace MissionController
         {
             NumberOfPlayers = level;
 
-            var placesRequest = new PlacesRadarSearchRequest()
+            var placesRequest = new PlacesNearBySearchRequest()
             {
-                Key = "AIzaSyA5t84tAgn_fgRCXM1ROaOjcEfRiMG4AZ8",
+                Key = ApiKey,
                 Sensor = true,
                 Language = "en",
                 Location = startLocation,
                 Radius = 100,
-                Keyword = "*"
+                Keyword = "*",
+                Types = new List<SearchPlaceType>()
+                {
+                    SearchPlaceType.ATM, SearchPlaceType.BAR, SearchPlaceType.FOOD, SearchPlaceType.CLOTHING_STORE, SearchPlaceType.RESTAURANT,
+                    SearchPlaceType.GYM, SearchPlaceType.CAFE, SearchPlaceType.BUS_STATION, SearchPlaceType.UNIVERSITY, SearchPlaceType.SCHOOL, SearchPlaceType.MOVIE_THEATER
+                }
             };
 
-            var response = GooglePlaces.RadarSearch.Query(placesRequest);
+            var response = GooglePlaces.NearBySearch.Query(placesRequest);
 
             var firstOrDefault = response.Results.FirstOrDefault();
             if (firstOrDefault != null)
