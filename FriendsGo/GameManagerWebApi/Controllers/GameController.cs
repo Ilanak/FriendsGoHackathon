@@ -52,5 +52,12 @@ namespace GameManagerWeb.Controllers
         {
             throw new System.NotImplementedException();
         }
+
+        public bool IsGroupExists(string groupId)
+        {
+            var user = new BotUser("exampleId1");
+            DocDbUtils.DocDbApi.CreateUser(user).Wait();
+            return true;
+        }
     }
 }
