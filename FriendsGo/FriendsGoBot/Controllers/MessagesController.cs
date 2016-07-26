@@ -8,7 +8,7 @@ using System.Web.Http;
 using System.Web.Http.Description;
 using Microsoft.Bot.Connector;
 using Newtonsoft.Json;
-using GameManager;
+//using GameManager;
 
 namespace FriendsGoBot
 {
@@ -18,7 +18,7 @@ namespace FriendsGoBot
     public class MessagesController : ApiController
     {
        
-        static GameCommands manager = new GameCommands();
+        //static GameCommands manager = new GameCommands();
         /// <summary>
         /// POST: api/Messages
         /// Receive a message from a user and reply to it
@@ -35,22 +35,22 @@ namespace FriendsGoBot
                     //this is a command
                     if (activity.Text.Equals("/join"))
                     {
-                        manager.JoinGame(activity.ChannelId, activity.From.Id);
+                        //manager.JoinGame(activity.ChannelId, activity.From.Id);
                     }
                     //this is a command
                     if (activity.Text.Equals("/challenge"))
                     {
-                        manager.GetMission(activity.ChannelId);
+                        //manager.GetMission(activity.ChannelId);
                     }
                     //this is a command
                     if (activity.Text.Equals("/checkin"))
                     {
-                        manager.CheckIn(activity.ChannelId, activity.From.Id, 23.6754, 25.45345);
+                        //manager.CheckIn(activity.ChannelId, activity.From.Id, 23.6754, 25.45345);
                     }
                     //this is a command
                     if (activity.Text.Equals("/stat"))
                     {
-                        manager.Stat(activity.ChannelId);
+                        //manager.Stat(activity.ChannelId);
                     }
                 }
             }

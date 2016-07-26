@@ -180,12 +180,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\GameManager\GameManager.csproj">
-      <Project>{0c7eed9e-6e03-4559-a2cd-eec1e4812eb8}</Project>
-      <Name>GameManager</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <PropertyGroup>
