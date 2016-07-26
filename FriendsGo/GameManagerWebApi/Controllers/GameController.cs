@@ -24,16 +24,14 @@ namespace GameManagerWeb.Controllers
             Go = 2,
         }
 
+        // userId -> tuple<gameId, state>
         public static ConcurrentDictionary<string, Tuple<string, UserState>> States = new ConcurrentDictionary<string, Tuple<string, UserState>>();
             
         [HttpPost]
         [Route("{gameId}/go/{userId}")]
         public string Go(string gameId, string userId)
         {
-            
-
             States[userId] = new Tuple<string, UserState>(gameId, UserState.Go);
-
             return "";
         }
 
@@ -41,6 +39,13 @@ namespace GameManagerWeb.Controllers
         [Route("{gameId}/join")]
         public string Join(string gameId, [FromBody] TelegramUser user)
         {
+            var group = DocDbApi.getGroupById(gameId);
+
+            if (group == null)
+            {
+                //DocDbApi.CreateGroup(new Group(gameId, null));
+            }
+
             return "";
         }
 
