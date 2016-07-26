@@ -27,21 +27,24 @@ namespace GameManagerWeb.Controllers
     public class GameController : ApiController // , IGameController
     {
         [HttpPost]
-        [Route("{gameId:int}/join")]
-        public string Join(int gameId, [FromBody] string userName)
+        [Route("{gameId}/join")]
+        public string Join(string gameId, [FromBody] TelegramUser user)
         {
-            return $"{userName} has joined the game {gameId}!";
+            return $"{user.Name} has joined the game {gameId}!";
         }
 
         [HttpPost]
-        public string Start(string groupId)
+        [Route("{gameId}/start")]
+        public string Start(string gameId)
         {
             return "Game started!";
         }
 
-        public string GetMission(string groupId)
+        [HttpGet]
+        [Route("{gameId}/mission")]
+        public string GetMission(string gameId)
         {
-            throw new System.NotImplementedException();
+            return $"Group {gameId} is on level ''. Your current mission is to go to BBB!";
         }
 
         public void CheckIn(string groupId, string userId, double latitude, double longitude)
@@ -61,4 +64,12 @@ namespace GameManagerWeb.Controllers
             return true;
         }
     }
+
+
+    public class TelegramUser
+    {
+        public string Name;
+    }
+
+
 }
