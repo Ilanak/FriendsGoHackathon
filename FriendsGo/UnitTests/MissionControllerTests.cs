@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using GoogleApi.Entities.Common;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MissionController;
+using Shared;
 
 namespace UnitTests
 {
@@ -24,18 +25,47 @@ namespace UnitTests
             Assert.AreEqual(result.SubMissions.Count, 1);
         }
 
+
         [TestMethod]
         public void TestDocDbGroupQuery()
         {
-            var group = DocDbUtils.DocDbApi.getGroupById("448c6202-f5d4-4513-8510-134e89b6dbab");
-            Assert.AreEqual(group.Id, "448c6202-f5d4-4513-8510-134e89b6dbab");
+            var group = DocDbUtils.DocDbApi.GetGroupById("448c6202-f5d4-4513-8510-134e89b6dbab");
+            Assert.AreEqual(group.TelegramId, "448c6202-f5d4-4513-8510-134e89b6dbab");
+        }
+
+        [TestMethod]
+        public void CreatUserTest()
+        {
+            BotUser usr = new BotUser("testId");
+            DocDbUtils.DocDbApi.CreateUser(usr).Wait();
+        }
+
+        [TestMethod]
+        public void CreateGroupTest()
+        {
+            var loc = new Location(32.158278, 34.808194);
+            Group grp = new Group("TestGroup", loc);
+            DocDbUtils.DocDbApi.CreateGroup(grp).Wait();
         }
 
         [TestMethod]
         public void TestDocDbUserQuery()
         {
-            var user = DocDbUtils.DocDbApi.getUserById("00000000-0000-0000-0000-000000000000");
+            var user = DocDbUtils.DocDbApi.GetUserById("testId");
             Assert.AreEqual(user.UserName, "testUser");
         }
+
+        //[TestMethod]
+        //public void UpdateGroupTest()
+        //{
+        //    var grp = DocDbUtils.DocDbApi.GetGroupById("TestGroup");
+        //    if (grp != null)
+        //    {
+        //        grp.Level = 1;
+        //        DocDbUtils.DocDbApi.UpdateGroup(grp.TelegramId, grp);
+        //    }
+        //    //Assert.AreEqual(user.UserName, "testUser");
+        //}
+
     }
 }
