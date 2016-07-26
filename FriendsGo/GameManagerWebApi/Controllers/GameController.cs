@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http;
 using System.Web.Http;
 using System.Web.Services.Protocols;
+using Shared;
 
 namespace GameManagerWeb.Controllers
 {
