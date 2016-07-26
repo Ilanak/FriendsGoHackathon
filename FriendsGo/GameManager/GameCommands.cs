@@ -1,4 +1,5 @@
 ﻿using GoogleApi.Entities.Common;
+using Shared;
 
 namespace GameManager
 {
@@ -19,6 +20,8 @@ namespace GameManager
     {
         public bool IsGroupExists(string groupId)
         {
+            var user = new BotUser("exampleId1");
+            DocDbUtils.DocDbApi.CreateUser(user).Wait();
             return true;
         }
 
