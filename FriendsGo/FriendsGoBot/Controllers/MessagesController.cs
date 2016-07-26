@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -24,6 +25,7 @@ namespace FriendsGoBot
         /// </summary>
         public async Task<HttpResponseMessage> Post([FromBody]Activity activity)
         {
+            Trace.TraceInformation("post activity");
             if (activity.Type == ActivityTypes.Message)
             {
                 ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
