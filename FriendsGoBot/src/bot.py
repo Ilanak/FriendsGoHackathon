@@ -10,32 +10,49 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+base_url = 'https://friendsgowebapi.azurewebsites.net/api/Game/'
 
 def error(bot, update, error):
     logger.warn('Update "%s" caused error "%s"' % (update, error))
 
 def handleCheckinCommand(bot, update):
-    button = telegram.KeyboardButton("Share my location", request_location=True)
+    checkin = {}
+    url = base_url + str(abs(update.message.chat_id)) + '/checkin/' + str(abs(update.message.from_user.id))
+    resp = requests.post(url, json=checkin)
+
+    button = telegram.KeyboardButton("Share location", request_location=True)
+    customKeyboard = [[button]]
+    reply_markup = telegram.ReplyKeyboardMarkup(keyboard=customKeyboard, resize_keyboard=True, one_time_keyboard=True)
+    bot.send_message(update.message.from_user.id, "Share your location", reply_markup=reply_markup)
+
+def handleStartGameCommand(bot, update):
+    checkin = {}
+    url = base_url + str(abs(update.message.chat_id)) + '/go/'+ str(abs(update.message.from_user.id))
+    resp = requests.post(url, json=checkin)
+
+    button = telegram.KeyboardButton("Share location", request_location=True)
     customKeyboard = [[button]]
     reply_markup = telegram.ReplyKeyboardMarkup(keyboard=customKeyboard, resize_keyboard=True, one_time_keyboard=True)
     bot.send_message(update.message.from_user.id, "Share your location", reply_markup=reply_markup)
 
 def handleJoinCommand(bot, update):
-    join = {"summary": "join", "chat_id": update.message.chat_id,"user_id": update.message.from_user.id}
-    resp = requests.post('https://todolist.example.com/tasks/', json=join)
-    if resp.status_code == 201:
+    join = {"Name": update.message.from_user.name, "Id": update.message.from_user.id}
+    url = base_url+ str(abs(update.message.chat_id))+'/join'
+    resp = requests.post(url, json=join)
+    if resp.status_code == 200:
         bot.send_message(update.message.chat_id, "You joined the game!")
 
 def handleChallengeCommand(bot, update):
-    challenge = {"summary": "challenge", "chat_id": update.message.chat_id}
-    resp = requests.post('https://todolist.example.com/tasks/', json=challenge)
+    url = base_url + str(abs(update.message.chat_id)) + '/mission'
+    resp = requests.get(url)
     if resp.status_code == 200:
-        bot.send_message(update.message.chat_id, "YourChallengeIs:")
-        for location_item in resp.json():
-            bot.send_message(update.message.chat_id, "get to:%s,%s", location_item['id'], location_item['count'])
+        bot.send_message(update.message.chat_id, resp.jason.dumps())
 
 def handleStatCommand(bot, update):
-    bot.send_message(update.message.chat_id, "Status: ")
+    url = base_url + str(abs(update.message.chat_id)) + '/Stat'
+    resp = requests.get(url)
+    if resp.status_code == 200:
+        bot.send_message(update.message.chat_id, resp.jason.dumps())
 
 #task = {"summary": "Take out trash", "description": "" }
 #resp = requests.post('https://todolist.example.com/tasks/', json=task)
@@ -44,13 +61,23 @@ def handleStatCommand(bot, update):
 
 
 def handleMyLocationCommand(bot, update):
-    bot.send_message(update.message.chat_id, "Thanks")
+    user = str(abs(update.message.from_user.id))
+    latitude = str(update.message.location.latitude)
+    longitude = str(update.message.location.longitude)
+    location = {"UserId": user ,"Latitude": latitude, "Longitude": longitude}
+    url = base_url + '/location'
+    resp = requests.post(url, json=location)
+    bot.send_message(update.message.from_user.id, "Thanks.")
+    #if resp.status_code == 200:
+     #   i=5
+        #check for finish mission
 
 def main():
     updater = Updater(token="269182723:AAG26YGMIwHaSi6oGQUdM2kABsdeMVNKSdA")
     dp = updater.dispatcher
     dp.add_handler(CommandHandler("join", handleJoinCommand))
-    dp.add_handler(CommandHandler("challenge", handleChallengeCommand))
+    dp.add_handler(CommandHandler("mission", handleChallengeCommand))
+    dp.add_handler(CommandHandler("go", handleStartGameCommand))
     dp.add_handler(CommandHandler("stat", handleStatCommand))
     dp.add_handler(CommandHandler("checkin", handleCheckinCommand))
 
