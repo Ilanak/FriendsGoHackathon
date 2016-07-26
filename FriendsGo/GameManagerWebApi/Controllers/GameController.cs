@@ -39,7 +39,7 @@ namespace GameManagerWeb.Controllers
         [Route("{gameId}/join")]
         public string Join(string gameId, [FromBody] TelegramUser user)
         {
-            var group = DocDbApi.getGroupById(gameId);
+            var group = DocDbApi.GetGroupById(gameId);
 
             if (group == null)
             {
@@ -70,11 +70,11 @@ namespace GameManagerWeb.Controllers
         [Route("{gameId}/mission")]
         public string GetMission(string gameId)
         {
-            var group = DocDbApi.getGroupById(gameId);
+            var group = DocDbApi.GetGroupById(gameId);
 
             if (group != null)
             {
-                return $"Group {group.Id} is on level {group.Level}. Your current mission is to go to BBB!";
+                return $"Group {group.TelegramId} is on level {group.Level}. Your current mission is to go to BBB!";
             }
 
             throw new ArgumentException();
