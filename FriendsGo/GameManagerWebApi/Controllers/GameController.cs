@@ -1,12 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Web.Http;
-using System.Web.Http.Results;
-using System.Web.Services.Protocols;
 using DocDbUtils;
 using Shared;
 
@@ -43,7 +37,7 @@ namespace GameManagerWeb.Controllers
 
             if (group == null)
             {
-                //DocDbApi.CreateGroup(new Group(gameId, null));
+                DocDbApi.CreateGroup(new Group(gameId, null));
             }
 
             return "";
