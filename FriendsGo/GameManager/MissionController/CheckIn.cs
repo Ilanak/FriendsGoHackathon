@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MissionController
+namespace GameManager
 {
     public class CheckIn
     {

@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using GoogleApi.Entities.Common;
 
-namespace MissionController
+namespace GameManager
 {
     public interface IMissionController
     {

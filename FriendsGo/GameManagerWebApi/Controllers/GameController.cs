@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Web.Http;
 using DocDbUtils;
+using GameManager;
+using GoogleApi.Entities.Common;
 using Shared;
 
 namespace GameManagerWeb.Controllers
@@ -20,7 +24,9 @@ namespace GameManagerWeb.Controllers
 
         // userId -> tuple<gameId, state>
         public static ConcurrentDictionary<string, Tuple<string, UserState>> States = new ConcurrentDictionary<string, Tuple<string, UserState>>();
-            
+
+        public static MissionController MissionController = new MissionController();
+
         [HttpPost]
         [Route("{gameId}/go/{userId}")]
         public string Go(string gameId, string userId)
@@ -37,10 +43,14 @@ namespace GameManagerWeb.Controllers
 
             if (group == null)
             {
-                DocDbApi.CreateGroup(new Group(gameId, null));
+                DocDbApi.CreateGroup(new Group(gameId, null)).Wait();
             }
 
-            return "";
+            DocDbApi.CreateUser(new BotUser(user.Id, user.Name)).Wait();
+
+            // Connect user id to game
+
+            return $"{user.Name} successfully joined FriendsGo group {gameId}!";
         }
 
         [HttpPost]
@@ -48,7 +58,7 @@ namespace GameManagerWeb.Controllers
         public string Cancel(string userId)
         {
             States[userId] = new Tuple<string, UserState>(string.Empty, UserState.None);
-            return "";
+            return "Operation canceled.";
         }
 
         [HttpPost]
@@ -68,10 +78,14 @@ namespace GameManagerWeb.Controllers
 
             if (group != null)
             {
-                return $"Group {group.TelegramId} is on level {group.Level}. Your current mission is to go to BBB!";
+                var mission = MissionController.GetMission(group.Level, group.StartLocation, new List<Location>() {});
+
+                return $"Group {group.TelegramId} is on level {group.Level}. " + Environment.NewLine + 
+                       $"Your current missions are:" + Environment.NewLine +
+                       $"{string.Join(Environment.NewLine, mission.SubMissions.Select(s => s.Description))}";
             }
 
-            throw new ArgumentException();
+            throw new ArgumentException($"Group {gameId} does not exist!");
         }
 
         [HttpPost]
