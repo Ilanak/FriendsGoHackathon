@@ -55,6 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BotUser.cs" />
+    <Compile Include="docDbEntityBase.cs" />
     <Compile Include="DocDB\DocDbApi.cs" />
     <Compile Include="GameCommands.cs" />
     <Compile Include="Group.cs" />
