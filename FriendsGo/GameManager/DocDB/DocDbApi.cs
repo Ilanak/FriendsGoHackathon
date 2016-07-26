@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Net;
 using System.Security.Policy;
+using GameManager;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Shared;
@@ -22,6 +23,16 @@ namespace DocDbUtils
         private static DocumentClient client;
 
         /// <summary>
+        ///  creates group in docDB groups collection
+        /// </summary>
+        /// <param name="group"> new group </param>
+        /// <returns>Task</returns>
+        public static async Task CreateGroup(Group group)
+        {
+            await CreateGroupDocumentIfNotExistsAsync(DatabaseName, GroupsCollectionName, group);
+        }
+
+        /// <summary>
         ///  creates user in docDB users collection
         /// </summary>
         /// <param name="user"> new user </param>
@@ -32,23 +43,13 @@ namespace DocDbUtils
         }
 
         /// <summary>
-        ///  creates group in docDB groups collection
-        /// </summary>
-        /// <param name="group"> new group </param>
-        /// <returns>Task</returns>
-        public static async Task CreateGroup(Group group)
-        {
-            await CreateGroupDocumentIfNotExistsAsync(DatabaseName, UsersCollectionName, group);
-        }
-
-        /// <summary>
         ///  returns all groups with same id , or null if no group exisits if this Id
         /// </summary>
         /// <param name="id">groupd id </param>
         /// <returns>selected group if exists</returns>
-        public static Group getGroupById(string id)
+        public static Group GetGroupById(string id)
         {
-            return GetGroupById(DatabaseName, GroupsCollectionName, id).FirstOrDefault();
+            return GetEntityById<Group>(DatabaseName, GroupsCollectionName, id).FirstOrDefault();
         }
 
         /// <summary>
@@ -56,49 +57,37 @@ namespace DocDbUtils
         /// </summary>
         /// <param name="id">user id </param>
         /// <returns>selected user if exists</returns>
-        public static BotUser getUserById(string id)
+        public static BotUser GetUserById(string id)
         {
-            return GetUserById(DatabaseName, UsersCollectionName, id).FirstOrDefault();
+            return GetEntityById<BotUser>(DatabaseName, UsersCollectionName, id).FirstOrDefault();
         }
 
+        //public static void UpdateGroup(string telegramId, Group newGroup)
+        //{
+        //    ReplaceEntity(DatabaseName, GroupsCollectionName, telegramId, newGroup).Wait();
+        //}
+        //private static async Task ReplaceEntity<T>(string databaseName, string collectionName, string telegramId, T updatedEntity)
+        //{
+        //    try
+        //    {
+        //        await client.ReplaceDocumentAsync(UriFactory.CreateDocumentUri(databaseName, collectionName, telegramId), updatedEntity);
+        //    }
+        //    catch (DocumentClientException de)
+        //    {
+        //        throw;
+        //    }
+        //}
 
-        private static List<BotUser> GetUserById(string databaseName, string collectionName, string usrId)
+        private static List<T> GetEntityById<T>(string databaseName, string collectionName, string entityTelegramId) where T:DocDbEntityBase
         {
-            // Set some common query options
             FeedOptions queryOptions = new FeedOptions { MaxItemCount = -1 };
-
-            // Here we find the Andersen family via its LastName
-            IQueryable<BotUser> userQuery = client.CreateDocumentQuery<BotUser>(
+            IQueryable<T> query = client.CreateDocumentQuery<T>(
                     UriFactory.CreateDocumentCollectionUri(databaseName, collectionName), queryOptions)
-                    .Where(usr => usr.Id == usrId);
+                    .Where(entity => entity.TelegramId == entityTelegramId);
 
-            // The query is executed synchronously here, but can also be executed asynchronously via the IDocumentQuery<T> interface
-            Console.WriteLine("Running LINQ query...");
-            foreach (BotUser usr in userQuery)
-            {
-                Console.WriteLine("\tRead {0}", usr);
-            }
-            return userQuery.ToList();
+            return query.ToList();
         }
 
-        private static List<Group> GetGroupById(string databaseName, string collectionName,string groupId)
-        {
-            // Set some common query options
-            FeedOptions queryOptions = new FeedOptions { MaxItemCount = -1 };
-
-            // Here we find the Andersen family via its LastName
-            IQueryable<Group> GroupQuery = client.CreateDocumentQuery<Group>(
-                    UriFactory.CreateDocumentCollectionUri(databaseName, collectionName), queryOptions)
-                    .Where(grp => grp.Id== groupId);
-
-            // The query is executed synchronously here, but can also be executed asynchronously via the IDocumentQuery<T> interface
-            Console.WriteLine("Running LINQ query...");
-            foreach (Group family in GroupQuery)
-            {
-                Console.WriteLine("\tRead {0}", groupId);
-            }
-            return GroupQuery.ToList();
-        }
         public static void InitDocDbConnection()
         {
             try
@@ -144,7 +133,6 @@ namespace DocDbUtils
             try
             {
                 await client.ReadDatabaseAsync(UriFactory.CreateDatabaseUri(databaseName));
-                WriteToConsoleAndPromptToContinue("Found {0}", databaseName);
             }
             catch (DocumentClientException de)
             {
@@ -152,7 +140,6 @@ namespace DocDbUtils
                 if (de.StatusCode == HttpStatusCode.NotFound)
                 {
                     await client.CreateDatabaseAsync(new Database { Id = databaseName });
-                    WriteToConsoleAndPromptToContinue("Created {0}", databaseName);
                 }
                 else
                 {
@@ -166,7 +153,6 @@ namespace DocDbUtils
             try
             {
                 await client.ReadDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(databaseName, collectionName));
-                WriteToConsoleAndPromptToContinue("Found {0}", collectionName);
             }
             catch (DocumentClientException de)
             {
@@ -198,15 +184,13 @@ namespace DocDbUtils
         {
             try
             {
-                await client.ReadDocumentAsync(UriFactory.CreateDocumentUri(databaseName, collectionName, user.Id.ToString()));
-                WriteToConsoleAndPromptToContinue("Found {0}", user.Id);
+                await client.ReadDocumentAsync(UriFactory.CreateDocumentUri(databaseName, collectionName, user.TelegramId));
             }
             catch (DocumentClientException de)
             {
                 if (de.StatusCode == HttpStatusCode.NotFound)
                 {
                     await client.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(databaseName, collectionName), user);
-                    WriteToConsoleAndPromptToContinue("Created User {0}", user.Id);
                 }
                 else
                 {
@@ -219,15 +203,13 @@ namespace DocDbUtils
         {
             try
             {
-                await client.ReadDocumentAsync(UriFactory.CreateDocumentUri(databaseName, collectionName, group.Id.ToString()));
-                WriteToConsoleAndPromptToContinue("Found {0}", group.Id);
+                await client.ReadDocumentAsync(UriFactory.CreateDocumentUri(databaseName, collectionName, group.TelegramId));
             }
             catch (DocumentClientException de)
             {
                 if (de.StatusCode == HttpStatusCode.NotFound)
                 {
                     await client.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(databaseName, collectionName), group);
-                    WriteToConsoleAndPromptToContinue("Created User {0}", group.Id);
                 }
                 else
                 {

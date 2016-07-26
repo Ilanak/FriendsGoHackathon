@@ -1,12 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Web.Http;
-using System.Web.Http.Results;
-using System.Web.Services.Protocols;
 using DocDbUtils;
 using Shared;
 
@@ -24,16 +18,14 @@ namespace GameManagerWeb.Controllers
             Go = 2,
         }
 
+        // userId -> tuple<gameId, state>
         public static ConcurrentDictionary<string, Tuple<string, UserState>> States = new ConcurrentDictionary<string, Tuple<string, UserState>>();
             
         [HttpPost]
         [Route("{gameId}/go/{userId}")]
         public string Go(string gameId, string userId)
         {
-            
-
             States[userId] = new Tuple<string, UserState>(gameId, UserState.Go);
-
             return "";
         }
 
@@ -41,6 +33,13 @@ namespace GameManagerWeb.Controllers
         [Route("{gameId}/join")]
         public string Join(string gameId, [FromBody] TelegramUser user)
         {
+            var group = DocDbApi.GetGroupById(gameId);
+
+            if (group == null)
+            {
+                DocDbApi.CreateGroup(new Group(gameId, null));
+            }
+
             return "";
         }
 
@@ -65,11 +64,11 @@ namespace GameManagerWeb.Controllers
         [Route("{gameId}/mission")]
         public string GetMission(string gameId)
         {
-            var group = DocDbApi.getGroupById(gameId);
+            var group = DocDbApi.GetGroupById(gameId);
 
             if (group != null)
             {
-                return $"Group {group.Id} is on level {group.Level}. Your current mission is to go to BBB!";
+                return $"Group {group.TelegramId} is on level {group.Level}. Your current mission is to go to BBB!";
             }
 
             throw new ArgumentException();
