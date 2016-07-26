@@ -58,13 +58,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MissionController\MissionController.csproj">
-      <Project>{731DC626-8881-4597-B4B6-4442360C8729}</Project>
-      <Name>MissionController</Name>
-    </ProjectReference>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <ProjectReference Include="..\GameManager\GameManager.csproj">
+      <Project>{0c7eed9e-6e03-4559-a2cd-eec1e4812eb8}</Project>
+      <Name>GameManager</Name>
+    </ProjectReference>
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
