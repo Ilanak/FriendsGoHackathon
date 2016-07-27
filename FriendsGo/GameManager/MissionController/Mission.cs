@@ -17,12 +17,12 @@ namespace GameManager
 
         public List<SubMission> SubMissions;
 
-        public bool validateLocation(Location loc)
+        public bool ValidateLocation(Location loc)
         {
             bool validated = false;
             foreach (var subMission in SubMissions)
             {
-                if (subMission.validateLocation(loc))
+                if (subMission.ValidateLocation(loc))
                 {
                     validated = true;
                     break;
@@ -32,12 +32,12 @@ namespace GameManager
 
         }
 
-        public bool isCompleted()
+        public bool IsCompleted()
         {
             bool completed = true;
             foreach (var subMission in SubMissions)
             {
-                if (!subMission.isCompleted())
+                if (!subMission.IsCompleted())
                 {
                     completed = false;
                 }
@@ -49,12 +49,12 @@ namespace GameManager
     public static class SubMissionsFactory
     {
 
-        public static SubMission Create(SubMissionType type, int level, Location startLocation)
+        public static SubMission Create(SubMissionType type, int level, Location startLocation, int numberCheckInRequired, int meterRadius)
         {
             switch (type)
             {
                 case SubMissionType.ExactLocation:
-                    return new ExactLocationSubMission(level, startLocation);
+                    return new ExactLocationSubMission(level, startLocation, numberCheckInRequired, meterRadius);
                 default:
                         throw new ArgumentException();
             }
@@ -67,7 +67,7 @@ namespace GameManager
 
         public Dictionary<int, int>  PlayersAmount = new Dictionary<int, int>()
         {
-            { 1, 1}, {2,1} , {3,2} , {4,2} ,{ 5, 3}, {6,3} , {7,3} , {8,3}
+            { 1, 1}, {2,2} , {3,3} , {4,3} ,{ 5, 3}, {6,3} , {7,4} , {8,4}
         };
  
 
@@ -75,9 +75,9 @@ namespace GameManager
 
         public string Description;
 
-        public abstract bool validateLocation(Location loc);
+        public abstract bool ValidateLocation(Location loc);
 
-        public abstract bool isCompleted();
+        public abstract bool IsCompleted();
 
 
     }
@@ -85,10 +85,10 @@ namespace GameManager
 
     public class ExactLocationSubMission : SubMission
     {
-        private int NumberOfPlayers;
+        public int NumberOfPlayers;
         
         //for in process validation
-        private int checkedInCount;
+        private int _checkedInCount;
 
         private List<bool> checkedIn = new List<bool>(MAX_PLAYERS_AMOUNT);
 
@@ -96,10 +96,10 @@ namespace GameManager
 
         public TimeSpan Duration;
 
-        public ExactLocationSubMission(int level, Location startLocation)
+        public ExactLocationSubMission(int level, Location startLocation, int numberCheckInRequired, int meterRadius)
         {
-            NumberOfPlayers = PlayersAmount[level];
-            checkedInCount = 0;
+            NumberOfPlayers = numberCheckInRequired;
+            _checkedInCount = 0;
 
             var placesRequest = new PlacesNearBySearchRequest()
             {
@@ -107,7 +107,7 @@ namespace GameManager
                 Sensor = true,
                 Language = "en",
                 Location = startLocation,
-                Radius = level * 50,
+                Radius = meterRadius,
                 Keyword = "*",
                 Types = new List<SearchPlaceType>()
                 {
@@ -132,17 +132,17 @@ namespace GameManager
             Duration = TimeSpan.MaxValue;
         }
 
-        public override bool validateLocation(Location loc)
+        public override bool ValidateLocation(Location loc)
         {
             //if location meets creteria
-            checkedInCount++;
+            _checkedInCount++;
             return true;
             //else false;
         }
 
-        public override bool isCompleted()
+        public override bool IsCompleted()
         {
-            if (checkedInCount == NumberOfPlayers)
+            if (_checkedInCount == NumberOfPlayers)
             {
                 return true;
             }
