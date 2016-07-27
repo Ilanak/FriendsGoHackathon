@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
+using System.Web;
 using System.Web.Http;
 using DocDbUtils;
 using GameManager;
@@ -33,6 +37,7 @@ namespace GameManagerWebApi.Controllers
         public string Go(string gameId, string userId)
         {
             States[userId] = new Tuple<string, UserState>(gameId, UserState.Go);
+            Trace.TraceInformation($"user {userId} changed his status to Go");
             return $"State for user {userId} changed to {States[userId]}";
         }
 
@@ -54,9 +59,17 @@ namespace GameManagerWebApi.Controllers
                 await DocDbApi.CreateUser(new BotUser(user.Id, user.Name));
             }
 
-            
-            await DocDbApi.AddUserGroups(telegramUser.TelegramId, group.TelegramId);
-            return $"{user.Name} successfully joined FriendsGo group {gameId}!";
+            if (DocDbApi.GetUserGroupById(user.Id, gameId) == null)
+            {
+                await DocDbApi.AddUserGroups(user.Id, gameId);
+                Trace.TraceInformation($"{user.Name} successfully joined FriendsGo group {gameId}!");
+                return $"{user.Name} successfully joined FriendsGo group {gameId}!";
+            }
+            else
+            {
+                Trace.TraceInformation($"{user.Name} already joined {gameId}!");
+                return $"{user.Name} already joined {gameId}!";
+            }
         }
 
         [HttpPost]
@@ -78,7 +91,7 @@ namespace GameManagerWebApi.Controllers
 
         [HttpGet]
         [Route("{gameId}/mission")]
-        public string GetMission(string gameId)
+        public HttpResponseMessage GetMission(string gameId)
         {
             var group = DocDbApi.GetGroupById(gameId);
 
@@ -88,7 +101,7 @@ namespace GameManagerWebApi.Controllers
 
                 if (group.GetCurrentMission() == null)
                 {
-                    mission = MissionController.GetMission(group.Level, group.StartLocation, new List<Location>() {});
+                    mission = MissionController.GetMission(group.Level, group.StartLocation, new List<Location>() { group.StartLocation });
 
                     group.GeneratedMissions[group.Level] = mission;
 
@@ -98,10 +111,13 @@ namespace GameManagerWebApi.Controllers
                 {
                     mission = group.GetCurrentMission();
                 }
-                
-                return $"Group {group.TelegramId} is on level {group.Level}. " + Environment.NewLine +
-                           $"Your current missions are:" + Environment.NewLine +
-                           $"{string.Join(Environment.NewLine, mission.SubMissions.Select(s => s.Description))}";
+
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent($"Group {group.TelegramId} is on level {group.Level}. " + Environment.NewLine +
+                              $"Your current missions are:" + Environment.NewLine +
+                              $"{string.Join(Environment.NewLine, mission.SubMissions.Select(s => s.Description))}")
+                };
             }
 
             throw new ArgumentException($"Group {gameId} does not exist!");
@@ -111,15 +127,18 @@ namespace GameManagerWebApi.Controllers
         [Route("location")]
         public string Location([FromBody] UserLocation location)
         {
+            Trace.TraceInformation("Location request");
             string message = string.Empty;
             var userId = location.UserId;
 
             if (States[userId] == null)
             {
+                Trace.TraceInformation($"user {userId} is not on the list");
                 return "";
             }
             if (States[userId].Item2 == UserState.Go)
             {
+                Trace.TraceInformation($"user {userId} has go'ed the game");
                 var groupId = States[userId].Item1;
                 var group = DocDbApi.GetGroupById(groupId);
 
@@ -131,6 +150,7 @@ namespace GameManagerWebApi.Controllers
             }
             else if (States[userId].Item2 == UserState.Checkin)
             {
+                Trace.TraceInformation($"user {userId} has sent checkin location");
                 var groupId = States[userId].Item1;
                 var group = DocDbApi.GetGroupById(groupId);
 
@@ -138,6 +158,8 @@ namespace GameManagerWebApi.Controllers
 
                 if (mission != null)
                 {
+                    // for debuging:
+                    //var validationResult = mission.ValidateLocation(location.ToLocation(), userId, debugMode: true);
                     var validationResult = mission.ValidateLocation(location.ToLocation(), userId);
 
                     if (validationResult)
@@ -159,12 +181,16 @@ namespace GameManagerWebApi.Controllers
             }
             else
             {
+                Trace.TraceInformation("The user status is incorrect");
                 throw new ArgumentException();
             }
 
             var botResponse = new BotResponse(userId, States[userId].Item1, message);
+            var reponseJson = Newtonsoft.Json.JsonConvert.SerializeObject(botResponse);
+
+            Trace.TraceInformation($"bot response: {reponseJson}");
             States[userId] = new Tuple<string, UserState>(string.Empty, UserState.None);
-            return Newtonsoft.Json.JsonConvert.SerializeObject(botResponse);
+            return reponseJson;
         }
 
         [HttpGet]

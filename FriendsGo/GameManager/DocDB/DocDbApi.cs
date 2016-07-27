@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Net;
 using System.Security.Policy;
+using System.Text;
 using GameManager;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
@@ -62,6 +63,11 @@ namespace DocDbUtils
         {
             ReplaceEntity(DatabaseName, GroupsCollectionName, telegramId, user);
         }
+
+        public static List<BotUser> GetAllUsers()
+        {
+            return GetEntityById<BotUser>(DatabaseName, UserGroupCollectionName);
+        }
         #endregion
 
         #region groups API
@@ -86,6 +92,11 @@ namespace DocDbUtils
             return GetEntityById<Group>(DatabaseName, GroupsCollectionName, id).FirstOrDefault();
         }
 
+        public static List<Group> GetAllGroups()
+        {
+            return GetEntityById<Group>(DatabaseName, GroupsCollectionName);
+        }
+
         public static void UpdateGroup(string telegramId, Group newGroup)
         {
             ReplaceEntity(DatabaseName, GroupsCollectionName, telegramId, newGroup);
@@ -100,7 +111,7 @@ namespace DocDbUtils
 
         #region UserGroupsApi
 
-        public static async Task AddUserGroups(string userId , string groupId)
+        public static async Task AddUserGroups(string userId, string groupId)
         {
             var user = GetUserById(userId);
             var group = GetGroupById(groupId);
@@ -109,7 +120,7 @@ namespace DocDbUtils
                 throw UserOrGroupNotFoundException;
             }
 
-            var userGroup = new UserGroup(userId: userId ,groupId: groupId);
+            var userGroup = new UserGroup(userId: userId, groupId: groupId);
             await CreateuserGroupDocumentIfNotExistsAsync(DatabaseName, UserGroupCollectionName, userGroup);
         }
 
@@ -124,7 +135,7 @@ namespace DocDbUtils
             return GetEntityById<UserGroup>(DatabaseName, UserGroupCollectionName, GetUserGroupId(userId, groupId)).FirstOrDefault();
         }
 
-        public static void DeleteUserGroup(string userId , string groupId)
+        public static void DeleteUserGroup(string userId, string groupId)
         {
             DeleteDocument(DatabaseName, UserGroupCollectionName, GetUserGroupId(userId, groupId));
         }
@@ -155,34 +166,62 @@ namespace DocDbUtils
 
         #endregion
 
+        /// <summary>
+        /// Get list of top 10 groups (from all around the world!!!)
+        /// </summary>
+        /// <returns></returns>
+        public static string GetTopGroups()
+        {
+            var groups = GetAllGroups();
+            var statList = groups.OrderByDescending(grp => grp.Level);
+            var topGroups = new StringBuilder();
+            var place = 1;
+
+            topGroups.AppendFormat("Top Groups:");
+            topGroups.AppendLine();
+
+            foreach (var group in statList)
+            {
+                topGroups.AppendFormat("#{0} {1} - level :{2}", place++, group.TelegramId, group.Level);
+                topGroups.AppendLine();
+            }
+
+            return topGroups.ToString();
+        }
+
         private static string GetUserGroupId(string userId, string groupId)
         {
             return string.Format("{0}_{1}", userId, groupId);
         }
-        private static void ReplaceEntity<T>(string databaseName, string collectionName, string telegramId, T updatedEntity)
+        private static async void ReplaceEntity<T>(string databaseName, string collectionName, string telegramId, T updatedEntity)
         {
+            var uri = UriFactory.CreateDocumentUri(databaseName, collectionName, telegramId);
+            var result = await client.ReplaceDocumentAsync(uri, updatedEntity);
+        }
+
+        private static List<T> GetEntityById<T>(string databaseName, string collectionName, string entityTelegramId = null) where T : DocDbEntityBase
+        {
+            FeedOptions queryOptions = new FeedOptions { MaxItemCount = -1 };
+            IQueryable<T> query;
+            if (entityTelegramId != null)
+            {
+                query = client.CreateDocumentQuery<T>(
+                UriFactory.CreateDocumentCollectionUri(databaseName, collectionName), queryOptions)
+                .Where(entity => entity.TelegramId == entityTelegramId);
+            }
+            else
+            {
+                query = client.CreateDocumentQuery<T>(
+                UriFactory.CreateDocumentCollectionUri(databaseName, collectionName), queryOptions); ;
+            }
             try
             {
-                var uri = UriFactory.CreateDocumentUri(databaseName, collectionName, telegramId);
-                client.ReplaceDocumentAsync(uri, updatedEntity).Wait();
-            }
-            catch (DocumentClientException de)
-            {
-                throw;
+                return query.ToList();
             }
             catch (Exception ex)
             {
                 throw;
             }
-        }
-
-        private static List<T> GetEntityById<T>(string databaseName, string collectionName, string entityTelegramId) where T : DocDbEntityBase
-        {
-            FeedOptions queryOptions = new FeedOptions { MaxItemCount = -1 };
-            IQueryable<T> query = client.CreateDocumentQuery<T>(
-                    UriFactory.CreateDocumentCollectionUri(databaseName, collectionName), queryOptions)
-                    .Where(entity => entity.TelegramId == entityTelegramId);
-
             return query.ToList();
         }
 
