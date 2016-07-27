@@ -96,18 +96,18 @@ namespace GameManagerWebApi.Controllers
             {
                 Mission mission;
 
-                if (group.GetCurrentMission() == null)
+                //if (group.GetCurrentMission() == null)
                 {
-                    mission = MissionController.GetMission(group.Level, group.StartLocation, new List<Location>() {});
+                    mission = MissionController.GetMission(group.Level, group.StartLocation, new List<Location>() { group.StartLocation });
 
                     group.GeneratedMissions[group.Level] = mission;
 
                     DocDbApi.UpdateGroup(group.TelegramId, group);
                 }
-                else
+                /*else
                 {
                     mission = group.GetCurrentMission();
-                }
+                }*/
                 
                 return $"Group {group.TelegramId} is on level {group.Level}. " + Environment.NewLine +
                            $"Your current missions are:" + Environment.NewLine +
