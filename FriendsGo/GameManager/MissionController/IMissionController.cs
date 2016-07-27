@@ -1,18 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
 using GoogleApi;
 using GoogleApi.Entities.Common;
-using GoogleApi.Entities.Common.Enums;
 using GoogleApi.Entities.Maps.Geocode.Request;
-using GoogleApi.Entities.Places.Details.Request;
-using GoogleApi.Entities.Places.Search.Common.Enums;
-using GoogleApi.Entities.Places.Search.NearBy.Request;
 
 namespace GameManager
 {
@@ -96,7 +87,7 @@ namespace GameManager
             return mission;
         }
 
-        public string GetCityByCoordinates(double latitude, double longitude)
+        public static string GetCityByCoordinates(double latitude, double longitude)
         {
             var placesRequest = new GeocodingRequest()
             {
