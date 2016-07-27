@@ -199,6 +199,16 @@ namespace GameManagerWebApi.Controllers
         {
             throw new NotImplementedException();
         }
+
+        [HttpGet]
+        [Route("{globalStat")]
+        public string GlobalStat(string groupId)
+        {
+            var topGroups = DocDbApi.GetTopGroups();
+            Trace.TraceInformation($"bot response: topGroups : {topGroups}");
+            return topGroups;
+        }
+
     }
 
     public class TelegramUser
