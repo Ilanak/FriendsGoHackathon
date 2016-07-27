@@ -5,7 +5,13 @@ using System.Runtime.InteropServices.ComTypes;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using GoogleApi;
 using GoogleApi.Entities.Common;
+using GoogleApi.Entities.Common.Enums;
+using GoogleApi.Entities.Maps.Geocode.Request;
+using GoogleApi.Entities.Places.Details.Request;
+using GoogleApi.Entities.Places.Search.Common.Enums;
+using GoogleApi.Entities.Places.Search.NearBy.Request;
 
 namespace GameManager
 {
@@ -52,6 +58,27 @@ namespace GameManager
             }
 
             return mission;
+        }
+
+        public string GetCityByCoordinates(double latitude, double longitude)
+        {
+            var placesRequest = new GeocodingRequest()
+            {
+                Key = "AIzaSyA5t84tAgn_fgRCXM1ROaOjcEfRiMG4AZ8",
+                Sensor = true,
+                Language = "en",
+                Location = new Location(latitude, longitude),
+            };
+
+            var result = GoogleMaps.Geocode.Query(placesRequest);
+            string city = "";
+
+            foreach (var r in from r in result.Results from t in r.Types where t.ToString().Equals("LOCALITY") select r)
+            {
+                city = r.AddressComponents.First().LongName;
+            }
+
+            return city;
         }
     }
 }

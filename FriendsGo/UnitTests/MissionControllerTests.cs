@@ -27,45 +27,55 @@ namespace UnitTests
 
 
         [TestMethod]
-        public void TestDocDbGroupQuery()
+        public void GroupQueryTest()
         {
-            var group = DocDbUtils.DocDbApi.GetGroupById("448c6202-f5d4-4513-8510-134e89b6dbab");
-            Assert.AreEqual(group.TelegramId, "448c6202-f5d4-4513-8510-134e89b6dbab");
+            var group = DocDbUtils.DocDbApi.GetGroupById("testGroup");
+            Assert.AreEqual(group.TelegramId, "testGroup");
         }
 
         [TestMethod]
         public void CreatUserTest()
         {
-            BotUser usr = new BotUser("testId", "");
+            BotUser usr = new BotUser("testId", "TestName");
             DocDbUtils.DocDbApi.CreateUser(usr).Wait();
         }
 
         [TestMethod]
         public void CreateGroupTest()
         {
-            var loc = new Location(32.158278, 34.808194);
-            Group grp = new Group("TestGroup", loc);
+            Group grp = new Group("testGroup", null);
             DocDbUtils.DocDbApi.CreateGroup(grp).Wait();
         }
 
         [TestMethod]
-        public void TestDocDbUserQuery()
+        public void UserQueryTest()
         {
             var user = DocDbUtils.DocDbApi.GetUserById("testId");
             Assert.AreEqual(user.UserName, "testUser");
         }
 
-        //[TestMethod]
-        //public void UpdateGroupTest()
-        //{
-        //    var grp = DocDbUtils.DocDbApi.GetGroupById("TestGroup");
-        //    if (grp != null)
-        //    {
-        //        grp.Level = 1;
-        //        DocDbUtils.DocDbApi.UpdateGroup(grp.TelegramId, grp);
-        //    }
-        //    //Assert.AreEqual(user.UserName, "testUser");
-        //}
+        [TestMethod]
+        public void UpdateGroupTest()
+        {
+            var grp = DocDbUtils.DocDbApi.GetGroupById("testGroup");
+            if (grp != null)
+            {
+                grp.Level = 1;
+                DocDbUtils.DocDbApi.UpdateGroup(grp.TelegramId, grp);
+            }
+            //Assert.AreEqual(user.UserName, "testUser");
+        }
 
+        [TestMethod]
+        public void CreateCollectionTest()
+        {
+            DocDbUtils.DocDbApi.CreateCollection("UsersGroups");
+        }
+
+        [TestMethod]
+        public void DeleteGroup()
+        {
+            DocDbUtils.DocDbApi.DeleteGroup("testGroup");
+        }
     }
 }
