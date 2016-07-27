@@ -5,11 +5,14 @@ using GoogleApi;
 using GoogleApi.Entities.Common;
 using GoogleApi.Entities.Places.Search.Common.Enums;
 using GoogleApi.Entities.Places.Search.NearBy.Request;
+using Newtonsoft.Json;
 
 namespace GameManager
 {
-    public class Mission 
+    [JsonConverter(typeof(UserConverter))]
+    public class Mission
     {
+        
         public Mission()
         {
             SubMissions = new List<SubMission>();
@@ -56,7 +59,7 @@ namespace GameManager
                 case SubMissionType.ExactLocation:
                     return new ExactLocationSubMission(level, startLocation);
                 default:
-                        throw new ArgumentException();
+                    throw new ArgumentException();
             }
         }
     }
@@ -65,11 +68,18 @@ namespace GameManager
     {
         protected const int MAX_PLAYERS_AMOUNT = 100;
 
-        public Dictionary<int, int>  PlayersAmount = new Dictionary<int, int>()
+        public Dictionary<int, int> PlayersAmount = new Dictionary<int, int>()
         {
-            { 1, 1}, {2,1} , {3,2} , {4,2} ,{ 5, 3}, {6,3} , {7,3} , {8,3}
+            {1, 1},
+            {2, 1},
+            {3, 2},
+            {4, 2},
+            {5, 3},
+            {6, 3},
+            {7, 3},
+            {8, 3}
         };
- 
+
 
         protected const string ApiKey = "AIzaSyA5t84tAgn_fgRCXM1ROaOjcEfRiMG4AZ8";
 
@@ -86,7 +96,7 @@ namespace GameManager
     public class ExactLocationSubMission : SubMission
     {
         private int NumberOfPlayers;
-        
+
         //for in process validation
         private int checkedInCount;
 
@@ -107,12 +117,19 @@ namespace GameManager
                 Sensor = true,
                 Language = "en",
                 Location = startLocation,
-                Radius = level * 50,
+                Radius = level*50,
                 Keyword = "*",
                 Types = new List<SearchPlaceType>()
                 {
-                    SearchPlaceType.BAR, SearchPlaceType.FOOD, SearchPlaceType.CLOTHING_STORE, SearchPlaceType.RESTAURANT,
-                    SearchPlaceType.GYM, SearchPlaceType.CAFE, SearchPlaceType.UNIVERSITY, SearchPlaceType.SCHOOL, SearchPlaceType.MOVIE_THEATER
+                    SearchPlaceType.BAR,
+                    SearchPlaceType.FOOD,
+                    SearchPlaceType.CLOTHING_STORE,
+                    SearchPlaceType.RESTAURANT,
+                    SearchPlaceType.GYM,
+                    SearchPlaceType.CAFE,
+                    SearchPlaceType.UNIVERSITY,
+                    SearchPlaceType.SCHOOL,
+                    SearchPlaceType.MOVIE_THEATER
                 }
             };
 
@@ -157,5 +174,22 @@ namespace GameManager
         CityLocation = 2,
         CountryLocation = 3
     }
-    
+
+    public class UserConverter : JsonConverter
+    {
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            writer.WriteValue(value);
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            return reader.Value;
+        }
+
+        public override bool CanConvert(Type objectType)
+        {
+            return true;
+        }
+    }
 }

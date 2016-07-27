@@ -96,7 +96,7 @@ namespace GameManagerWebApi.Controllers
                 }
                 else
                 {
-                    mission = group.GeneratedMissions[group.Level];
+                    mission = group.GetCurrentMission();
                 }
                 
                 return $"Group {group.TelegramId} is on level {group.Level}. " + Environment.NewLine +
@@ -149,7 +149,11 @@ namespace GameManagerWebApi.Controllers
                         if (completeRsult)
                         {
                             result += Environment.NewLine + "Mission completed!";
+
+                            group.Level += 1;
+                            DocDbApi.UpdateGroup(group.TelegramId, group);
                         }
+
                     }
                 }
             }
