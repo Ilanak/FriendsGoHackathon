@@ -138,13 +138,13 @@ namespace GameManagerWebApi.Controllers
 
                 if (mission != null)
                 {
-                    var validationResult = mission.validateLocation(location.ToLocation());
+                    var validationResult = mission.ValidateLocation(location.ToLocation());
 
                     if (validationResult)
                     {
                         message += $"Check-in successfull for game {States[userId].Item1}!"; ;
 
-                        var completeRsult = mission.isCompleted();
+                        var completeRsult = mission.IsCompleted();
 
                         if (completeRsult)
                         {
