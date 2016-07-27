@@ -84,7 +84,7 @@ namespace GameManagerWebApi.Controllers
         [Route("{gameId}/checkin/{userId}")]
         public string CheckIn(string gameId, string userId)
         {
-            States[userId] = new Tuple<string, UserState>(gameId, UserState.Go);
+            States[userId] = new Tuple<string, UserState>(gameId, UserState.Checkin);
 
             return $"State for user {userId} changed to {States[userId]}";
         }

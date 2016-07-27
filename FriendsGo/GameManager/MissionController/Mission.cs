@@ -200,7 +200,7 @@ namespace GameManager
 
         protected override bool ValidateLocation(Location userLocation, bool debugMode = false)
         {
-            var maxDistanceAllowed = 50;
+            var maxDistanceAllowed = 500;
             //if location meets creteria
             var distanceInMeters = DistanceAlgorithm.DistanceBetweenPlacesInMeters(userLocation, _exactLocation);
 
