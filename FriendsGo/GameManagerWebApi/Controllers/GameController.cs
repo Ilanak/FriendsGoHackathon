@@ -33,7 +33,7 @@ namespace GameManagerWebApi.Controllers
         public string Go(string gameId, string userId)
         {
             States[userId] = new Tuple<string, UserState>(gameId, UserState.Go);
-            return "";
+            return $"State for user {userId} changed to {States[userId]}";
         }
 
         [HttpPost]
@@ -54,7 +54,7 @@ namespace GameManagerWebApi.Controllers
                 await DocDbApi.CreateUser(new BotUser(user.Id, user.Name));
             }
 
-            // Connect user id to game
+            // TODO: Connect user id to game
 
             return $"{user.Name} successfully joined FriendsGo group {gameId}!";
         }
@@ -73,7 +73,7 @@ namespace GameManagerWebApi.Controllers
         {
             States[userId] = new Tuple<string, UserState>(gameId, UserState.Go);
 
-            return "";
+            return $"State for user {userId} changed to {States[userId]}";
         }
 
         [HttpGet]
@@ -84,11 +84,24 @@ namespace GameManagerWebApi.Controllers
 
             if (group != null)
             {
-                var mission = MissionController.GetMission(group.Level, group.StartLocation, new List<Location>() {});
+                Mission mission;
 
-                return $"Group {group.TelegramId} is on level {group.Level}. " + Environment.NewLine + 
-                       $"Your current missions are:" + Environment.NewLine +
-                       $"{string.Join(Environment.NewLine, mission.SubMissions.Select(s => s.Description))}";
+                if (group.GetCurrentMission() == null)
+                {
+                    mission = MissionController.GetMission(group.Level, group.StartLocation, new List<Location>() {});
+
+                    group.GeneratedMissions[group.Level] = mission;
+
+                    DocDbApi.UpdateGroup(group.TelegramId, group);
+                }
+                else
+                {
+                    mission = group.GeneratedMissions[group.Level];
+                }
+                
+                return $"Group {group.TelegramId} is on level {group.Level}. " + Environment.NewLine +
+                           $"Your current missions are:" + Environment.NewLine +
+                           $"{string.Join(Environment.NewLine, mission.SubMissions.Select(s => s.Description))}";
             }
 
             throw new ArgumentException($"Group {gameId} does not exist!");
@@ -98,15 +111,47 @@ namespace GameManagerWebApi.Controllers
         [Route("location")]
         public string Location([FromBody] UserLocation location)
         {
-            string result;
+            string result = string.Empty;
             var userId = location.UserId;
-            if (States[userId].Item2 == UserState.Go)
+
+            if (States[userId] == null)
             {
-                result =  $"{userId} has GO'ed the game in {States[userId].Item1} group!";
+                return "";
+            }
+            else if (States[userId].Item2 == UserState.Go)
+            {
+                var groupId = States[userId].Item1;
+                var group = DocDbApi.GetGroupById(groupId);
+
+                group.StartLocation = location.ToLocation();
+
+                DocDbApi.UpdateGroup(group.TelegramId, group);
+
+                result = $"{userId} has GO'ed the game in {group.TelegramId} group!";
             }
             else if (States[userId].Item2 == UserState.Checkin)
             {
-                result =  $"{userId} has checked-in for game {States[userId].Item1}!";
+                var groupId = States[userId].Item1;
+                var group = DocDbApi.GetGroupById(groupId);
+
+                var mission = group.GetCurrentMission();
+
+                if (mission != null)
+                {
+                    var validationResult = mission.validateLocation(location.ToLocation());
+
+                    if (validationResult)
+                    {
+                        result += $"Check-in successfull for game {States[userId].Item1}!"; ;
+
+                        var completeRsult = mission.isCompleted();
+
+                        if (completeRsult)
+                        {
+                            result += Environment.NewLine + "Mission completed!";
+                        }
+                    }
+                }
             }
             else
             {
@@ -121,10 +166,9 @@ namespace GameManagerWebApi.Controllers
         [Route("{gameId}/stat")]
         public void Stat(string groupId)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
     }
-
 
     public class TelegramUser
     {
@@ -132,13 +176,15 @@ namespace GameManagerWebApi.Controllers
         public string Id;
     }
 
-
     public class UserLocation
     {
         public string UserId;
         public string Latitude;
-        public string Longtitude;
+        public string Longitude;
+
+        public Location ToLocation()
+        {
+            return new Location(Convert.ToDouble(Latitude), Convert.ToDouble(Longitude));
+        }
     }
-
-
 }
