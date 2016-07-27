@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Http;
@@ -33,6 +34,7 @@ namespace GameManagerWebApi.Controllers
         public string Go(string gameId, string userId)
         {
             States[userId] = new Tuple<string, UserState>(gameId, UserState.Go);
+            Trace.TraceInformation($"user {userId} changed his status to Go");
             return $"State for user {userId} changed to {States[userId]}";
         }
 
@@ -56,6 +58,7 @@ namespace GameManagerWebApi.Controllers
 
             
             await DocDbApi.AddUserGroups(telegramUser.TelegramId, group.TelegramId);
+            Trace.TraceInformation($"{user.Name} successfully joined FriendsGo group {gameId}!");
             return $"{user.Name} successfully joined FriendsGo group {gameId}!";
         }
 
@@ -86,18 +89,18 @@ namespace GameManagerWebApi.Controllers
             {
                 Mission mission;
 
-                if (group.GetCurrentMission() == null)
+                //if (group.GetCurrentMission() == null)
                 {
-                    mission = MissionController.GetMission(group.Level, group.StartLocation, new List<Location>() {});
+                    mission = MissionController.GetMission(group.Level, group.StartLocation, new List<Location>() { group.StartLocation });
 
                     group.GeneratedMissions[group.Level] = mission;
 
                     DocDbApi.UpdateGroup(group.TelegramId, group);
                 }
-                else
+                /*else
                 {
                     mission = group.GetCurrentMission();
-                }
+                }*/
                 
                 return $"Group {group.TelegramId} is on level {group.Level}. " + Environment.NewLine +
                            $"Your current missions are:" + Environment.NewLine +
@@ -111,15 +114,18 @@ namespace GameManagerWebApi.Controllers
         [Route("location")]
         public string Location([FromBody] UserLocation location)
         {
+            Trace.TraceInformation("Location request");
             string message = string.Empty;
             var userId = location.UserId;
 
             if (States[userId] == null)
             {
+                Trace.TraceInformation($"user {userId} is not on the list");
                 return "";
             }
             if (States[userId].Item2 == UserState.Go)
             {
+                Trace.TraceInformation($"user {userId} has go'ed the game");
                 var groupId = States[userId].Item1;
                 var group = DocDbApi.GetGroupById(groupId);
 
@@ -131,6 +137,7 @@ namespace GameManagerWebApi.Controllers
             }
             else if (States[userId].Item2 == UserState.Checkin)
             {
+                Trace.TraceInformation($"user {userId} has sent checkin location");
                 var groupId = States[userId].Item1;
                 var group = DocDbApi.GetGroupById(groupId);
 
@@ -138,6 +145,8 @@ namespace GameManagerWebApi.Controllers
 
                 if (mission != null)
                 {
+                    // for debuging:
+                    //var validationResult = mission.ValidateLocation(location.ToLocation(), userId, debugMode: true);
                     var validationResult = mission.ValidateLocation(location.ToLocation(), userId);
 
                     if (validationResult)
@@ -159,12 +168,16 @@ namespace GameManagerWebApi.Controllers
             }
             else
             {
+                Trace.TraceInformation("The user status is incorrect");
                 throw new ArgumentException();
             }
 
             var botResponse = new BotResponse(userId, States[userId].Item1, message);
+            var reponseJson = Newtonsoft.Json.JsonConvert.SerializeObject(botResponse);
+
+            Trace.TraceInformation($"bot response: {reponseJson}");
             States[userId] = new Tuple<string, UserState>(string.Empty, UserState.None);
-            return Newtonsoft.Json.JsonConvert.SerializeObject(botResponse);
+            return reponseJson;
         }
 
         [HttpGet]
