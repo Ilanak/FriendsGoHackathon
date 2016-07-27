@@ -54,7 +54,7 @@ namespace GameManagerWebApi.Controllers
                 await DocDbApi.CreateUser(new BotUser(user.Id, user.Name));
             }
 
-            // Connect user id to game
+            // TODO: Connect user id to game
 
             return $"{user.Name} successfully joined FriendsGo group {gameId}!";
         }
@@ -100,13 +100,25 @@ namespace GameManagerWebApi.Controllers
         {
             string result;
             var userId = location.UserId;
-            if (States[userId].Item2 == UserState.Go)
+
+            if (States[userId] == null)
             {
-                result =  $"{userId} has GO'ed the game in {States[userId].Item1} group!";
+                return "";
+            }
+            else if (States[userId].Item2 == UserState.Go)
+            {
+                var groupId = States[userId].Item1;
+                var group = DocDbApi.GetGroupById(groupId);
+
+                group.StartLocation = new Location(Convert.ToDouble(location.Latitude), Convert.ToDouble(location.Longtitude));
+
+                // TODO: Update group with location
+
+                result = $"{userId} has GO'ed the game in {group.TelegramId} group!";
             }
             else if (States[userId].Item2 == UserState.Checkin)
             {
-                result =  $"{userId} has checked-in for game {States[userId].Item1}!";
+                result = $"{userId} has checked-in for game {States[userId].Item1}!";
             }
             else
             {

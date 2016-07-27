@@ -8,7 +8,7 @@ namespace Shared
     {
         public int Level { get; set; }
         public DateTime CreateDate { get; private set; }
-        public Location StartLocation { get; private set; }
+        public Location StartLocation { get; set; }
         public int Score { get; set; }
 
         public Group(string id, Location location)
