@@ -8,7 +8,7 @@ using GoogleApi.Entities.Places.Search.NearBy.Request;
 
 namespace GameManager
 {
-    public class Mission
+    public class Mission 
     {
         public Mission()
         {

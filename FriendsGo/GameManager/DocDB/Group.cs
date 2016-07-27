@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using GameManager;
 using GoogleApi.Entities.Common;
 
@@ -10,6 +11,7 @@ namespace Shared
         public DateTime CreateDate { get; private set; }
         public Location StartLocation { get; set; }
         public int Score { get; set; }
+        public Dictionary<int, Mission> GeneratedMissions { get; set; }
 
         public Group(string id, Location location)
         {
@@ -17,6 +19,9 @@ namespace Shared
             CreateDate = DateTime.UtcNow;
             StartLocation = location;
             Score = 0;
+            GeneratedMissions = new Dictionary<int, Mission>();
         }
+
+
     }
 }

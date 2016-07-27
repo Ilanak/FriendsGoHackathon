@@ -84,11 +84,22 @@ namespace GameManagerWebApi.Controllers
 
             if (group != null)
             {
-                var mission = MissionController.GetMission(group.Level, group.StartLocation, new List<Location>() {});
+                Mission mission;
 
-                return $"Group {group.TelegramId} is on level {group.Level}. " + Environment.NewLine + 
-                       $"Your current missions are:" + Environment.NewLine +
-                       $"{string.Join(Environment.NewLine, mission.SubMissions.Select(s => s.Description))}";
+                if (group.GeneratedMissions[group.Level] == null)
+                {
+                    mission = MissionController.GetMission(group.Level, group.StartLocation, new List<Location>() {});
+
+                    // TODO: Update group
+                }
+                else
+                {
+                    mission = group.GeneratedMissions[group.Level];
+                }
+                
+                return $"Group {group.TelegramId} is on level {group.Level}. " + Environment.NewLine +
+                           $"Your current missions are:" + Environment.NewLine +
+                           $"{string.Join(Environment.NewLine, mission.SubMissions.Select(s => s.Description))}";
             }
 
             throw new ArgumentException($"Group {gameId} does not exist!");
