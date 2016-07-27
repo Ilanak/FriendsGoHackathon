@@ -26,15 +26,7 @@ namespace DocDbUtils
         private static DocumentClient client;
         public static Exception UserOrGroupNotFoundException { get; set; }
 
-        /// <summary>
-        ///  creates group in docDB groups collection
-        /// </summary>
-        /// <param name="group"> new group </param>
-        /// <returns>Task</returns>
-        public static async Task CreateGroup(Group group)
-        {
-            await CreateGroupDocumentIfNotExistsAsync(DatabaseName, GroupsCollectionName, group);
-        }
+        #region user API
 
         /// <summary>
         ///  creates user in docDB users collection
@@ -46,14 +38,9 @@ namespace DocDbUtils
             await CreateBotUserDocumentIfNotExistsAsync(DatabaseName, UsersCollectionName, user);
         }
 
-        /// <summary>
-        ///  returns all groups with same id , or null if no group exisits if this Id
-        /// </summary>
-        /// <param name="id">groupd id </param>
-        /// <returns>selected group if exists</returns>
-        public static Group GetGroupById(string id)
+        public static void DeleteUser(string telemgramId)
         {
-            return GetEntityById<Group>(DatabaseName, GroupsCollectionName, id).FirstOrDefault();
+            DeleteDocument(DatabaseName, UsersCollectionName, telemgramId).Wait();
         }
 
         /// <summary>
@@ -66,20 +53,47 @@ namespace DocDbUtils
             return GetEntityById<BotUser>(DatabaseName, UsersCollectionName, id).FirstOrDefault();
         }
 
+        public static void UpdateUser(string telegramId, BotUser user)
+        {
+            ReplaceEntity(DatabaseName, GroupsCollectionName, telegramId, user).Wait();
+        }
+        #endregion
+
+        #region groups API
+
+        /// <summary>
+        ///  creates group in docDB groups collection
+        /// </summary>
+        /// <param name="group"> new group </param>
+        /// <returns>Task</returns>
+        public static async Task CreateGroup(Group group)
+        {
+            await CreateGroupDocumentIfNotExistsAsync(DatabaseName, GroupsCollectionName, group);
+        }
+
+        /// <summary>
+        ///  returns all groups with same id , or null if no group exisits if this Id
+        /// </summary>
+        /// <param name="id">groupd id </param>
+        /// <returns>selected group if exists</returns>
+        public static Group GetGroupById(string id)
+        {
+            return GetEntityById<Group>(DatabaseName, GroupsCollectionName, id).FirstOrDefault();
+        }
+
         public static void UpdateGroup(string telegramId, Group newGroup)
         {
-            ReplaceEntity(DatabaseName, GroupsCollectionName, newGroup.TelegramId, newGroup).Wait();
+            ReplaceEntity(DatabaseName, GroupsCollectionName, telegramId, newGroup).Wait();
         }
 
         public static void DeleteGroup(string telemgramId)
         {
             DeleteDocument(DatabaseName, GroupsCollectionName, telemgramId).Wait();
         }
-        public static void DeleteUser(string telemgramId)
-        {
-            DeleteDocument(DatabaseName, UsersCollectionName, telemgramId).Wait();
-        }
 
+        #endregion
+
+        #region UserGroupsApi
         public static async Task AddUserGroups(string groupId, string userId)
         {
             var user = GetUserById(userId);
@@ -93,6 +107,28 @@ namespace DocDbUtils
             await CreateuserGroupDocumentIfNotExistsAsync(DatabaseName, UserGroupCollectionName, userGroup);
         }
 
+        /// <summary>
+        ///  returns all groups with same id , or null if no group exisits if this Id
+        /// </summary>
+        /// <param name="userId">groupd id </param>
+        /// /// <param name="groupId">groupd id </param>
+        /// <returns>selected group if exists</returns>
+        public static Group GetUserGroupById(string userId, string groupId)
+        {
+            return GetEntityById<Group>(DatabaseName, UserGroupCollectionName, GetUserGroupId(userId, groupId)).FirstOrDefault();
+        }
+
+        public static void DeleteUserGroup(string userId , string groupId)
+        {
+            DeleteDocument(DatabaseName, UserGroupCollectionName, GetUserGroupId(userId,groupId)).Wait();
+        }
+
+        #endregion
+
+        private static string GetUserGroupId(string userId, string groupId)
+        {
+            return string.Format("{0}_{1}", userId, groupId);
+        }
         private static async Task ReplaceEntity<T>(string databaseName, string collectionName, string telegramId, T updatedEntity)
         {
             try

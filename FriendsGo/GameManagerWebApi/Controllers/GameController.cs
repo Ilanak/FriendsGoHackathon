@@ -54,8 +54,8 @@ namespace GameManagerWebApi.Controllers
                 await DocDbApi.CreateUser(new BotUser(user.Id, user.Name));
             }
 
-            // TODO: Connect user id to game
-
+            
+            await DocDbApi.AddUserGroups(telegramUser.TelegramId, group.TelegramId);
             return $"{user.Name} successfully joined FriendsGo group {gameId}!";
         }
 
@@ -96,7 +96,7 @@ namespace GameManagerWebApi.Controllers
                 }
                 else
                 {
-                    mission = group.GeneratedMissions[group.Level];
+                    mission = group.GetCurrentMission();
                 }
                 
                 return $"Group {group.TelegramId} is on level {group.Level}. " + Environment.NewLine +
@@ -149,7 +149,11 @@ namespace GameManagerWebApi.Controllers
                         if (completeRsult)
                         {
                             message += Environment.NewLine + "Mission completed!";
+
+                            group.Level += 1;
+                            DocDbApi.UpdateGroup(group.TelegramId, group);
                         }
+
                     }
                 }
             }

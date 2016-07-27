@@ -6,11 +6,14 @@ using GoogleApi;
 using GoogleApi.Entities.Common;
 using GoogleApi.Entities.Places.Search.Common.Enums;
 using GoogleApi.Entities.Places.Search.NearBy.Request;
+using Newtonsoft.Json;
 
 namespace GameManager
 {
-    public class Mission 
+    [JsonConverter(typeof(UserConverter))]
+    public class Mission
     {
+        
         public Mission()
         {
             SubMissions = new List<SubMission>();
@@ -59,15 +62,13 @@ namespace GameManager
                 case SubMissionType.CityLocation:
                     return new CityLocationSubMission(level, startLocation, numberCheckInRequired, checkInCycleDuration);
                 default:
-                        throw new ArgumentException();
+                    throw new ArgumentException();
             }
         }
     }
 
     public abstract class SubMission
     {
-        protected const int MaxPlayersAmount = 100;
-
         protected const string ApiKey = "AIzaSyA5t84tAgn_fgRCXM1ROaOjcEfRiMG4AZ8";
 
         public string Description;
@@ -87,9 +88,6 @@ namespace GameManager
         //for in process validation
         private int _checkedInCount;
         private int _checkInCycleDuration;
-
-
-        private List<bool> checkedIn = new List<bool>(MaxPlayersAmount);
 
         public Location ExactLocation;
 
@@ -159,8 +157,7 @@ namespace GameManager
         private int _checkInCycleDuration;
         private string _city;
 
-
-        private List<bool> checkedIn = new List<bool>(MaxPlayersAmount);
+        private  List<string> Cities = new List<string>() {"Haifa", "Jerusalem", "BeerSheva"};
 
         public Location ExactLocation;
 
@@ -169,11 +166,14 @@ namespace GameManager
         public CityLocationSubMission(int level, Location startLocation, int numberCheckInRequired,
             int checkInCycleDuration)
         {
+           
             NumberOfPlayers = numberCheckInRequired;
             _checkedInCount = 0;
             _checkInCycleDuration = checkInCycleDuration;
 
-            _city = "Haifa";
+            Random rand = new Random();
+            int cityRand = rand.Next(0, Cities.Count - 1);
+            _city = Cities[cityRand];
 
             Description = string.Format("Your mission: {0} players have to checkin to {1}!",
                 NumberOfPlayers, _city);
@@ -214,5 +214,22 @@ namespace GameManager
         CityLocation = 2,
         CountryLocation = 3
     }
-    
+
+    public class UserConverter : JsonConverter
+    {
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            writer.WriteValue(value);
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            return reader.Value;
+        }
+
+        public override bool CanConvert(Type objectType)
+        {
+            return true;
+        }
+    }
 }
