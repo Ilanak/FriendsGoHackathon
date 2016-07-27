@@ -72,6 +72,10 @@ namespace DocDbUtils
         {
             DeleteDocument(DatabaseName, GroupsCollectionName, telemgramId).Wait();
         }
+        public static void DeleteUser(string telemgramId)
+        {
+            DeleteDocument(DatabaseName, UsersCollectionName, telemgramId).Wait();
+        }
 
         private static async Task ReplaceEntity<T>(string databaseName, string collectionName, string telegramId, T updatedEntity)
         {
