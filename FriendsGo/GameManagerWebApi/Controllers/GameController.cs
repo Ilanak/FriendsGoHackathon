@@ -201,14 +201,17 @@ namespace GameManagerWebApi.Controllers
         }
 
         [HttpGet]
-        [Route("{globalStat")]
-        public string GlobalStat(string groupId)
+        [Route("globalStat")]
+        public HttpResponseMessage GlobalStat(string groupId)
         {
             var topGroups = DocDbApi.GetTopGroups();
             Trace.TraceInformation($"bot response: topGroups : {topGroups}");
-            return topGroups;
+            return new HttpResponseMessage()
+            {
+                Content = new StringContent(topGroups)
+            };
+            //return topGroups;
         }
-
     }
 
     public class TelegramUser
