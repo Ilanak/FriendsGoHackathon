@@ -54,7 +54,7 @@ namespace GameManagerWebApi.Controllers
                 await DocDbApi.CreateUser(new BotUser(user.Id, user.Name));
             }
 
-            // Connect user id to game
+            // TODO: Connect user id to game
 
             return $"{user.Name} successfully joined FriendsGo group {gameId}!";
         }
@@ -84,11 +84,22 @@ namespace GameManagerWebApi.Controllers
 
             if (group != null)
             {
-                var mission = MissionController.GetMission(group.Level, group.StartLocation, new List<Location>() {});
+                Mission mission;
 
-                return $"Group {group.TelegramId} is on level {group.Level}. " + Environment.NewLine + 
-                       $"Your current missions are:" + Environment.NewLine +
-                       $"{string.Join(Environment.NewLine, mission.SubMissions.Select(s => s.Description))}";
+                if (group.GeneratedMissions[group.Level] == null)
+                {
+                    mission = MissionController.GetMission(group.Level, group.StartLocation, new List<Location>() {});
+
+                    // TODO: Update group
+                }
+                else
+                {
+                    mission = group.GeneratedMissions[group.Level];
+                }
+                
+                return $"Group {group.TelegramId} is on level {group.Level}. " + Environment.NewLine +
+                           $"Your current missions are:" + Environment.NewLine +
+                           $"{string.Join(Environment.NewLine, mission.SubMissions.Select(s => s.Description))}";
             }
 
             throw new ArgumentException($"Group {gameId} does not exist!");
@@ -100,13 +111,25 @@ namespace GameManagerWebApi.Controllers
         {
             string result;
             var userId = location.UserId;
-            if (States[userId].Item2 == UserState.Go)
+
+            if (States[userId] == null)
             {
-                result =  $"{userId} has GO'ed the game in {States[userId].Item1} group!";
+                return "";
+            }
+            else if (States[userId].Item2 == UserState.Go)
+            {
+                var groupId = States[userId].Item1;
+                var group = DocDbApi.GetGroupById(groupId);
+
+                group.StartLocation = new Location(Convert.ToDouble(location.Latitude), Convert.ToDouble(location.Longtitude));
+
+                // TODO: Update group with location
+
+                result = $"{userId} has GO'ed the game in {group.TelegramId} group!";
             }
             else if (States[userId].Item2 == UserState.Checkin)
             {
-                result =  $"{userId} has checked-in for game {States[userId].Item1}!";
+                result = $"{userId} has checked-in for game {States[userId].Item1}!";
             }
             else
             {
