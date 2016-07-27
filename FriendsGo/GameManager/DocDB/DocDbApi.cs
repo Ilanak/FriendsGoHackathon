@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -67,14 +68,23 @@ namespace DocDbUtils
             ReplaceEntity(DatabaseName, GroupsCollectionName, newGroup.TelegramId, newGroup).Wait();
         }
 
+        public static void DeleteGroup(string telemgramId)
+        {
+            DeleteDocument(DatabaseName, GroupsCollectionName, telemgramId).Wait();
+        }
+
         private static async Task ReplaceEntity<T>(string databaseName, string collectionName, string telegramId, T updatedEntity)
         {
             try
             {
                 var uri = UriFactory.CreateDocumentUri(databaseName, collectionName, telegramId);
-                await client.ReplaceDocumentAsync(uri,updatedEntity);
+                client.ReplaceDocumentAsync(uri, updatedEntity).Wait();
             }
             catch (DocumentClientException de)
+            {
+                throw;
+            }
+            catch (Exception ex)
             {
                 throw;
             }
@@ -88,6 +98,23 @@ namespace DocDbUtils
                     .Where(entity => entity.TelegramId == entityTelegramId);
 
             return query.ToList();
+        }
+
+        private static async Task DeleteDocument(string databaseName, string collectionName, string documentName)
+        {
+            try
+            {
+                client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(databaseName, collectionName, documentName)).Wait();
+                Console.WriteLine("Deleted {0}", documentName);
+            }
+            catch (DocumentClientException de)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
 
         public static void InitDocDbConnection()

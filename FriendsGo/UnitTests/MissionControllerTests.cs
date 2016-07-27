@@ -29,21 +29,21 @@ namespace UnitTests
         [TestMethod]
         public void GroupQueryTest()
         {
-            var group = DocDbUtils.DocDbApi.GetGroupById("448c6202-f5d4-4513-8510-134e89b6dbab");
-            Assert.AreEqual(group.TelegramId, "448c6202-f5d4-4513-8510-134e89b6dbab");
+            var group = DocDbUtils.DocDbApi.GetGroupById("testGroup");
+            Assert.AreEqual(group.TelegramId, "testGroup");
         }
 
         [TestMethod]
         public void CreatUserTest()
         {
-            BotUser usr = new BotUser("testId2");
+            BotUser usr = new BotUser("testId", "TestName");
             DocDbUtils.DocDbApi.CreateUser(usr).Wait();
         }
 
         [TestMethod]
         public void CreateGroupTest()
         {
-            Group grp = new Group("TestGroupNull", null);
+            Group grp = new Group("testGroup", null);
             DocDbUtils.DocDbApi.CreateGroup(grp).Wait();
         }
 
@@ -57,7 +57,7 @@ namespace UnitTests
         [TestMethod]
         public void UpdateGroupTest()
         {
-            var grp = DocDbUtils.DocDbApi.GetGroupById("TestGroup");
+            var grp = DocDbUtils.DocDbApi.GetGroupById("testGroup");
             if (grp != null)
             {
                 grp.Level = 1;
@@ -69,7 +69,13 @@ namespace UnitTests
         [TestMethod]
         public void CreateCollectionTest()
         {
-            DocDbUtils.DocDbApi.CreateCollection("UsersGroups").Wait();            
+            DocDbUtils.DocDbApi.CreateCollection("UsersGroups");
+        }
+
+        [TestMethod]
+        public void DeleteGroup()
+        {
+            DocDbUtils.DocDbApi.DeleteGroup("testGroup");
         }
     }
 }
