@@ -125,7 +125,7 @@ namespace GameManagerWebApi.Controllers
 
         [HttpPost]
         [Route("location")]
-        public string Location([FromBody] UserLocation location)
+        public HttpResponseMessage Location([FromBody] UserLocation location)
         {
             Trace.TraceInformation("Location request");
             string message = string.Empty;
@@ -134,7 +134,7 @@ namespace GameManagerWebApi.Controllers
             if (States[userId] == null)
             {
                 Trace.TraceInformation($"user {userId} is not on the list");
-                return "";
+                return new HttpResponseMessage(HttpStatusCode.BadRequest);
             }
             if (States[userId].Item2 == UserState.Go)
             {
@@ -173,8 +173,9 @@ namespace GameManagerWebApi.Controllers
                             message += Environment.NewLine + "Mission completed!";
 
                             group.Level += 1;
-                            DocDbApi.UpdateGroup(group.TelegramId, group);
                         }
+
+                        DocDbApi.UpdateGroup(group.TelegramId, group);
 
                     }
                 }
@@ -182,7 +183,7 @@ namespace GameManagerWebApi.Controllers
             else
             {
                 Trace.TraceInformation("The user status is incorrect");
-                throw new ArgumentException();
+                return new HttpResponseMessage(HttpStatusCode.BadRequest);
             }
 
             var botResponse = new BotResponse(userId, States[userId].Item1, message);
@@ -190,7 +191,10 @@ namespace GameManagerWebApi.Controllers
 
             Trace.TraceInformation($"bot response: {reponseJson}");
             States[userId] = new Tuple<string, UserState>(string.Empty, UserState.None);
-            return reponseJson;
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(reponseJson)
+            };
         }
 
         [HttpGet]
