@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using GoogleApi;
 using GoogleApi.Entities.Common;
@@ -183,9 +184,17 @@ namespace GameManager
         public override bool ValidateLocation(Location loc)
         {
             //if location meets creteria
-            _checkedInCount++;
-            return true;
-            //else false;
+            var userCity = MissionController.GetCityByCoordinates(loc.Latitude, loc.Longitude);
+            if (userCity.Equals(_city, StringComparison.InvariantCultureIgnoreCase))
+            {
+                Trace.TraceInformation("User city check-in was validated successfully");
+                _checkedInCount++;
+                return true;
+            }
+
+
+            Trace.TraceInformation($"Expected city was: {_city} while the user sent {userCity} location");
+            return false;
         }
 
         public override bool IsCompleted()
