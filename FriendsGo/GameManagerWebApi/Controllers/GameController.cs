@@ -206,7 +206,7 @@ namespace GameManagerWebApi.Controllers
         {
             var topGroups = DocDbApi.GetTopGroups();
             Trace.TraceInformation($"bot response: topGroups : {topGroups}");
-            return new HttpResponseMessage()
+            return new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent(topGroups)
             };
