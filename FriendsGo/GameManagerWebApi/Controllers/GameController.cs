@@ -33,7 +33,7 @@ namespace GameManagerWebApi.Controllers
         public string Go(string gameId, string userId)
         {
             States[userId] = new Tuple<string, UserState>(gameId, UserState.Go);
-            return "";
+            return $"State for user {userId} changed to {States[userId]}";
         }
 
         [HttpPost]
@@ -73,7 +73,7 @@ namespace GameManagerWebApi.Controllers
         {
             States[userId] = new Tuple<string, UserState>(gameId, UserState.Go);
 
-            return "";
+            return $"State for user {userId} changed to {States[userId]}";
         }
 
         [HttpGet]
@@ -148,13 +148,11 @@ namespace GameManagerWebApi.Controllers
         }
     }
 
-
     public class TelegramUser
     {
         public string Name;
         public string Id;
     }
-
 
     public class UserLocation
     {
@@ -162,6 +160,4 @@ namespace GameManagerWebApi.Controllers
         public string Latitude;
         public string Longtitude;
     }
-
-
 }
