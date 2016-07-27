@@ -21,5 +21,17 @@ namespace Shared
             Score = 0;
             GeneratedMissions = new Dictionary<int, Mission>();
         }
+
+        public Mission GetCurrentMission()
+        {
+            if (GeneratedMissions.ContainsKey(Level))
+            {
+                return GeneratedMissions[Level];
+            }
+            else
+            {
+                return null;
+            }
+        }
     }
 }

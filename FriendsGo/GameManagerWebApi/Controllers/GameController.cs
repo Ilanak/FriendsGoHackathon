@@ -86,11 +86,13 @@ namespace GameManagerWebApi.Controllers
             {
                 Mission mission;
 
-                if (group.GeneratedMissions[group.Level] == null)
+                if (group.GetCurrentMission() == null)
                 {
                     mission = MissionController.GetMission(group.Level, group.StartLocation, new List<Location>() {});
 
-                    // TODO: Update group
+                    group.GeneratedMissions[group.Level] = mission;
+
+                    DocDbApi.UpdateGroup(group.TelegramId, group);
                 }
                 else
                 {
@@ -109,7 +111,7 @@ namespace GameManagerWebApi.Controllers
         [Route("location")]
         public string Location([FromBody] UserLocation location)
         {
-            string result;
+            string result = string.Empty;
             var userId = location.UserId;
 
             if (States[userId] == null)
@@ -121,15 +123,35 @@ namespace GameManagerWebApi.Controllers
                 var groupId = States[userId].Item1;
                 var group = DocDbApi.GetGroupById(groupId);
 
-                group.StartLocation = new Location(Convert.ToDouble(location.Latitude), Convert.ToDouble(location.Longtitude));
+                group.StartLocation = location.ToLocation();
 
-                // TODO: Update group with location
+                DocDbApi.UpdateGroup(group.TelegramId, group);
 
                 result = $"{userId} has GO'ed the game in {group.TelegramId} group!";
             }
             else if (States[userId].Item2 == UserState.Checkin)
             {
-                result = $"{userId} has checked-in for game {States[userId].Item1}!";
+                var groupId = States[userId].Item1;
+                var group = DocDbApi.GetGroupById(groupId);
+
+                var mission = group.GetCurrentMission();
+
+                if (mission != null)
+                {
+                    var validationResult = mission.validateLocation(location.ToLocation());
+
+                    if (validationResult)
+                    {
+                        result += $"Check-in successfull for game {States[userId].Item1}!"; ;
+
+                        var completeRsult = mission.isCompleted();
+
+                        if (completeRsult)
+                        {
+                            result += Environment.NewLine + "Mission completed!";
+                        }
+                    }
+                }
             }
             else
             {
@@ -144,7 +166,7 @@ namespace GameManagerWebApi.Controllers
         [Route("{gameId}/stat")]
         public void Stat(string groupId)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
     }
 
@@ -158,6 +180,11 @@ namespace GameManagerWebApi.Controllers
     {
         public string UserId;
         public string Latitude;
-        public string Longtitude;
+        public string Longitude;
+
+        public Location ToLocation()
+        {
+            return new Location(Convert.ToDouble(Latitude), Convert.ToDouble(Longitude));
+        }
     }
 }
