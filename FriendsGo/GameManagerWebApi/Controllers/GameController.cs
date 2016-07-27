@@ -59,10 +59,17 @@ namespace GameManagerWebApi.Controllers
                 await DocDbApi.CreateUser(new BotUser(user.Id, user.Name));
             }
 
-            
-            await DocDbApi.AddUserGroups(telegramUser.TelegramId, group.TelegramId);
-            Trace.TraceInformation($"{user.Name} successfully joined FriendsGo group {gameId}!");
-            return $"{user.Name} successfully joined FriendsGo group {gameId}!";
+            if (DocDbApi.GetUserGroupById(user.Id, gameId) == null)
+            {
+                await DocDbApi.AddUserGroups(user.Id, gameId);
+                Trace.TraceInformation($"{user.Name} successfully joined FriendsGo group {gameId}!");
+                return $"{user.Name} successfully joined FriendsGo group {gameId}!";
+            }
+            else
+            {
+                Trace.TraceInformation($"{user.Name} already joined {gameId}!");
+                return $"{user.Name} already joined {gameId}!";
+            }
         }
 
         [HttpPost]
