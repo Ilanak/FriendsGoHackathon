@@ -14,6 +14,7 @@ namespace UnitTests
         private const string userId = "testUserId";
         private const string userName = "testUserName";
         private const string groupId = "testGroupId";
+        private const string groupId2 = "testGroupId2";
 
         [TestInitialize]
         public void initDocDbConnection()
@@ -48,7 +49,7 @@ namespace UnitTests
         [TestMethod]
         public void CreateGroupTest()
         {
-            Group grp = new Group(groupId, null);
+            Group grp = new Group(groupId2, null);
             DocDbUtils.DocDbApi.CreateGroup(grp).Wait();
         }
 
@@ -66,13 +67,13 @@ namespace UnitTests
             var grp = DocDbUtils.DocDbApi.GetGroupById(groupId);
             if (grp != null)
             {
-                grp.Level = 1;
+                grp.Level = 2;
                 DocDbUtils.DocDbApi.UpdateGroup(grp.TelegramId, grp);
             }
 
             grp = DocDbUtils.DocDbApi.GetGroupById(groupId);
 
-            Assert.AreEqual(grp.Level, 1);
+            Assert.AreEqual(grp.Level, 2);
         }
 
         [TestMethod]
@@ -96,13 +97,20 @@ namespace UnitTests
         [TestMethod]
         public void AddUserGroup()
         {
-            DocDbUtils.DocDbApi.AddUserGroups(groupId, userId).Wait();
+            DocDbUtils.DocDbApi.AddUserGroups(userId, groupId).Wait();
         }
 
         [TestMethod]
         public void DeleteUserGroup()
         {
             DocDbUtils.DocDbApi.DeleteUserGroup(userId, groupId);
+        }
+
+        [TestMethod]
+        public void GetAllUsersGroupsTest()
+        {
+            var groups = DocDbUtils.DocDbApi.GetUsersGroups(userId);
+            var y = 1;
         }
     }
 }
