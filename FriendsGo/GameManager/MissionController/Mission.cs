@@ -6,10 +6,11 @@ using GoogleApi.Entities.Common;
 using GoogleApi.Entities.Places.Search.Common.Enums;
 using GoogleApi.Entities.Places.Search.NearBy.Request;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace GameManager
 {
-    [JsonConverter(typeof(UserConverter))]
+    
     public class Mission
     {
         
@@ -66,6 +67,7 @@ namespace GameManager
         }
     }
 
+    [JsonConverter(typeof(SubMissionConverter))]
     public abstract class SubMission
     {
         protected const int MaxPlayersAmount = 100;
@@ -74,6 +76,8 @@ namespace GameManager
 
         public string Description;
 
+        public SubMissionType SubType;
+
         public abstract bool ValidateLocation(Location loc);
 
         public abstract bool IsCompleted();
@@ -81,7 +85,7 @@ namespace GameManager
 
     }
 
-
+    
     public class ExactLocationSubMission : SubMission
     {
         public int NumberOfPlayers;
@@ -97,8 +101,13 @@ namespace GameManager
 
         public TimeSpan Duration;
 
+        public ExactLocationSubMission()
+        {
+        }
+
         public ExactLocationSubMission(int level, Location startLocation, int numberCheckInRequired, int meterRadius, int checkInCycleDuration)
         {
+            SubType = SubMissionType.ExactLocation;
             NumberOfPlayers = numberCheckInRequired;
             _checkedInCount = 0;
             _checkInCycleDuration = checkInCycleDuration;
@@ -168,9 +177,14 @@ namespace GameManager
 
         public TimeSpan Duration;
 
+        public CityLocationSubMission()
+        {
+        }
+
         public CityLocationSubMission(int level, Location startLocation, int numberCheckInRequired,
             int checkInCycleDuration)
         {
+            SubType = SubMissionType.CityLocation;
             NumberOfPlayers = numberCheckInRequired;
             _checkedInCount = 0;
             _checkInCycleDuration = checkInCycleDuration;
@@ -209,21 +223,68 @@ namespace GameManager
         CountryLocation = 3
     }
 
-    public class UserConverter : JsonConverter
+    public class SubMissionConverter : JsonCreationConverter<SubMission>
     {
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        protected override SubMission Create(Type objectType, JObject jObject)
         {
-            writer.WriteValue(value);
+            var type = jObject["SubType"].ToString();
+            if (type == "1")
+            {
+                return new ExactLocationSubMission();
+            }
+            else if (type == "2")
+            {
+                return new CityLocationSubMission();
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
+    }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-        {
-            return reader.Value;
-        }
+    public abstract class JsonCreationConverter<T> : JsonConverter
+    {
+        /// <summary>
+        /// Create an instance of objectType, based properties in the JSON object
+        /// </summary>
+        /// <param name="objectType">type of object expected</param>
+        /// <param name="jObject">
+        /// contents of JSON object that will be deserialized
+        /// </param>
+        /// <returns></returns>
+        protected abstract T Create(Type objectType, JObject jObject);
 
         public override bool CanConvert(Type objectType)
         {
-            return true;
+            return typeof(T).IsAssignableFrom(objectType);
+        }
+
+
+        public override bool CanWrite { get { return false; } }
+
+        public override object ReadJson(JsonReader reader,
+                                        Type objectType,
+                                         object existingValue,
+                                         JsonSerializer serializer)
+        {
+            // Load JObject from stream
+            JObject jObject = JObject.Load(reader);
+
+            // Create target object based on JObject
+            T target = Create(objectType, jObject);
+
+            // Populate the object properties
+            serializer.Populate(jObject.CreateReader(), target);
+
+            return target;
+        }
+
+        public override void WriteJson(JsonWriter writer,
+            object value,
+            JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
         }
     }
 }

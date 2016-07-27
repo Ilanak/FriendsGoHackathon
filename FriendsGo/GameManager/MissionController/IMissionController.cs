@@ -54,17 +54,17 @@ namespace GameManager
             //int - sec duration for checkins to happen 
             //bool - flag add city - randomize a new city to add to game
             LevelsSettings = new Dictionary<int, MissionSettings>();
-            LevelsSettings[0] = new MissionSettings(1, 1, 10,     600, false);
-            LevelsSettings[1] = new MissionSettings(1, 2, 10,     600, false);
-            LevelsSettings[2] = new MissionSettings(1, 2, 50,     600, false);
-            LevelsSettings[3] = new MissionSettings(1, 3, 10,     600, false);
+            LevelsSettings[0] = new MissionSettings(1, 1, 50,     600, false);
+            LevelsSettings[1] = new MissionSettings(1, 2, 50,     600, false);
+            LevelsSettings[2] = new MissionSettings(1, 2, 70,     600, false);
+            LevelsSettings[3] = new MissionSettings(1, 3, 50,     600, false);
             LevelsSettings[4] = new MissionSettings(1, 3, 100,    600, false);
-            LevelsSettings[5] = new MissionSettings(2, 1, 10,     600, false);
+            LevelsSettings[5] = new MissionSettings(2, 1, 50,     600, false);
             LevelsSettings[6] = new MissionSettings(2, 1, 200,    600, false);
             LevelsSettings[7] = new MissionSettings(2, 2, 100,    600, false);
             LevelsSettings[8] = new MissionSettings(2, 2, 200,    600, false);
-            LevelsSettings[9] = new MissionSettings(3, 1, 10,     600, true);
-            LevelsSettings[9] = new MissionSettings(3, 2, 10,     600, true);
+            LevelsSettings[9] = new MissionSettings(3, 1, 50,     600, true);
+            LevelsSettings[9] = new MissionSettings(3, 2, 50,     600, true);
 
         }
 
