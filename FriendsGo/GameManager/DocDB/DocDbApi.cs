@@ -166,16 +166,27 @@ namespace DocDbUtils
 
         #endregion
 
-        public static string getStats()
+        /// <summary>
+        /// Get list of top 10 groups (from all around the world!!!)
+        /// </summary>
+        /// <returns></returns>
+        public static string GetTopGroups()
         {
             var groups = GetAllGroups();
             var statList = groups.OrderByDescending(grp => grp.Level);
             var topGroups = new StringBuilder();
-            for (int i = 0; i < Math.Min(statList.Count(),10)-1; i++)
+            var place = 1;
+
+            topGroups.AppendFormat("Top Groups:");
+            topGroups.AppendLine();
+
+            foreach (var group in statList)
             {
-                topGroups.Append(String.Format("#{0} {1}", i + 1,statList.First().TelegramId));
+                topGroups.AppendFormat("#{0} {1} - level :{2}", place++, group.TelegramId, group.Level);
+                topGroups.AppendLine();
             }
-            return "";
+
+            return topGroups.ToString();
         }
 
         private static string GetUserGroupId(string userId, string groupId)

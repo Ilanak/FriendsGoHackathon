@@ -126,9 +126,7 @@ namespace UnitTests
         [TestMethod]
         public void GetTopGroups()
         {
-            var topGroups = DocDbUtils.DocDbApi.getStats();
-            var groups = DocDbUtils.DocDbApi.GetAllGroups();
-            var statList = groups.OrderByDescending(grp => grp.Level);
+            DocDbUtils.DocDbApi.GetTopGroups();
         }
     }
 }
