@@ -96,7 +96,7 @@ namespace GameManagerWebApi.Controllers
                 }
                 else
                 {
-                    mission = group.GeneratedMissions[group.Level];
+                    mission = group.GetCurrentMission();
                 }
                 
                 return $"Group {group.TelegramId} is on level {group.Level}. " + Environment.NewLine +
@@ -111,14 +111,14 @@ namespace GameManagerWebApi.Controllers
         [Route("location")]
         public string Location([FromBody] UserLocation location)
         {
-            string result = string.Empty;
+            string message = string.Empty;
             var userId = location.UserId;
 
             if (States[userId] == null)
             {
                 return "";
             }
-            else if (States[userId].Item2 == UserState.Go)
+            if (States[userId].Item2 == UserState.Go)
             {
                 var groupId = States[userId].Item1;
                 var group = DocDbApi.GetGroupById(groupId);
@@ -127,7 +127,7 @@ namespace GameManagerWebApi.Controllers
 
                 DocDbApi.UpdateGroup(group.TelegramId, group);
 
-                result = $"{userId} has GO'ed the game in {group.TelegramId} group!";
+                message = $"{userId} has GO'ed the game in {group.TelegramId} group!";
             }
             else if (States[userId].Item2 == UserState.Checkin)
             {
@@ -142,14 +142,18 @@ namespace GameManagerWebApi.Controllers
 
                     if (validationResult)
                     {
-                        result += $"Check-in successfull for game {States[userId].Item1}!"; ;
+                        message += $"Check-in successfull for game {States[userId].Item1}!"; ;
 
                         var completeRsult = mission.IsCompleted();
 
                         if (completeRsult)
                         {
                             result += Environment.NewLine + "Mission completed!";
+
+                            group.Level += 1;
+                            DocDbApi.UpdateGroup(group.TelegramId, group);
                         }
+
                     }
                 }
             }
@@ -158,8 +162,9 @@ namespace GameManagerWebApi.Controllers
                 throw new ArgumentException();
             }
 
+            var botResponse = new BotResponse(userId, States[userId].Item1, message);
             States[userId] = new Tuple<string, UserState>(string.Empty, UserState.None);
-            return result;
+            return Newtonsoft.Json.JsonConvert.SerializeObject(botResponse);
         }
 
         [HttpGet]
@@ -185,6 +190,20 @@ namespace GameManagerWebApi.Controllers
         public Location ToLocation()
         {
             return new Location(Convert.ToDouble(Latitude), Convert.ToDouble(Longitude));
+        }
+    }
+
+    public class BotResponse
+    {
+        public string UserId;
+        public string GroupId;
+        public string Message;
+
+        public BotResponse(string userId, string groupId, string message)
+        {
+            UserId = userId;
+            GroupId = groupId;
+            Message = message;
         }
     }
 }

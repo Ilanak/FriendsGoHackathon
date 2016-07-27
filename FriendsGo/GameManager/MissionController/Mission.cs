@@ -5,11 +5,14 @@ using GoogleApi;
 using GoogleApi.Entities.Common;
 using GoogleApi.Entities.Places.Search.Common.Enums;
 using GoogleApi.Entities.Places.Search.NearBy.Request;
+using Newtonsoft.Json;
 
 namespace GameManager
 {
-    public class Mission 
+    [JsonConverter(typeof(UserConverter))]
+    public class Mission
     {
+        
         public Mission()
         {
             SubMissions = new List<SubMission>();
@@ -49,27 +52,23 @@ namespace GameManager
     public static class SubMissionsFactory
     {
 
-        public static SubMission Create(SubMissionType type, int level, Location startLocation, int numberCheckInRequired, int meterRadius)
+        public static SubMission Create(SubMissionType type, int level, Location startLocation, int numberCheckInRequired, int meterRadius, int checkInCycleDuration)
         {
             switch (type)
             {
                 case SubMissionType.ExactLocation:
-                    return new ExactLocationSubMission(level, startLocation, numberCheckInRequired, meterRadius);
+                    return new ExactLocationSubMission(level, startLocation, numberCheckInRequired, meterRadius, checkInCycleDuration);
+                case SubMissionType.CityLocation:
+                    return new CityLocationSubMission(level, startLocation, numberCheckInRequired, checkInCycleDuration);
                 default:
-                        throw new ArgumentException();
+                    throw new ArgumentException();
             }
         }
     }
 
     public abstract class SubMission
     {
-        protected const int MAX_PLAYERS_AMOUNT = 100;
-
-        public Dictionary<int, int>  PlayersAmount = new Dictionary<int, int>()
-        {
-            { 1, 1}, {2,2} , {3,3} , {4,3} ,{ 5, 3}, {6,3} , {7,4} , {8,4}
-        };
- 
+        protected const int MaxPlayersAmount = 100;
 
         protected const string ApiKey = "AIzaSyA5t84tAgn_fgRCXM1ROaOjcEfRiMG4AZ8";
 
@@ -89,17 +88,20 @@ namespace GameManager
         
         //for in process validation
         private int _checkedInCount;
+        private int _checkInCycleDuration;
 
-        private List<bool> checkedIn = new List<bool>(MAX_PLAYERS_AMOUNT);
+
+        private List<bool> checkedIn = new List<bool>(MaxPlayersAmount);
 
         public Location ExactLocation;
 
         public TimeSpan Duration;
 
-        public ExactLocationSubMission(int level, Location startLocation, int numberCheckInRequired, int meterRadius)
+        public ExactLocationSubMission(int level, Location startLocation, int numberCheckInRequired, int meterRadius, int checkInCycleDuration)
         {
             NumberOfPlayers = numberCheckInRequired;
             _checkedInCount = 0;
+            _checkInCycleDuration = checkInCycleDuration;
 
             var placesRequest = new PlacesNearBySearchRequest()
             {
@@ -150,6 +152,55 @@ namespace GameManager
         }
     }
 
+    public class CityLocationSubMission : SubMission
+    {
+        public int NumberOfPlayers;
+
+        //for in process validation
+        private int _checkedInCount;
+        private int _checkInCycleDuration;
+        private string _city;
+
+
+        private List<bool> checkedIn = new List<bool>(MaxPlayersAmount);
+
+        public Location ExactLocation;
+
+        public TimeSpan Duration;
+
+        public CityLocationSubMission(int level, Location startLocation, int numberCheckInRequired,
+            int checkInCycleDuration)
+        {
+            NumberOfPlayers = numberCheckInRequired;
+            _checkedInCount = 0;
+            _checkInCycleDuration = checkInCycleDuration;
+
+            _city = "Haifa";
+
+            Description = string.Format("Your mission: {0} players have to checkin to {1}!",
+                NumberOfPlayers, _city);
+
+
+        }
+
+        public override bool ValidateLocation(Location loc)
+        {
+            //if location meets creteria
+            _checkedInCount++;
+            return true;
+            //else false;
+        }
+
+        public override bool IsCompleted()
+        {
+            if (_checkedInCount == NumberOfPlayers)
+            {
+                return true;
+            }
+            return false;
+        }
+    }
+
     public enum SubMissionType
     {
         Default = 0,
@@ -157,5 +208,22 @@ namespace GameManager
         CityLocation = 2,
         CountryLocation = 3
     }
-    
+
+    public class UserConverter : JsonConverter
+    {
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            writer.WriteValue(value);
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            return reader.Value;
+        }
+
+        public override bool CanConvert(Type objectType)
+        {
+            return true;
+        }
+    }
 }
