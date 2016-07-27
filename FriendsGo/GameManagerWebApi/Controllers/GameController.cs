@@ -148,7 +148,7 @@ namespace GameManagerWebApi.Controllers
 
                         if (completeRsult)
                         {
-                            result += Environment.NewLine + "Mission completed!";
+                            message += Environment.NewLine + "Mission completed!";
 
                             group.Level += 1;
                             DocDbApi.UpdateGroup(group.TelegramId, group);
