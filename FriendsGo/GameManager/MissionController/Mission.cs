@@ -106,9 +106,12 @@ namespace GameManager
         }
 
 
-        private static void OnTimedEvent(object source, ElapsedEventArgs e)
+        private void OnTimedEvent(object source, ElapsedEventArgs e)
         {
-            Console.WriteLine("The Elapsed event was raised at {0}", e.SignalTime);
+            _timer.Enabled = false;
+            //message users that time for compliting check in is over - start again?
+            _checkedInCount = 0;
+            checkIns.Clear();
         }
 
 
@@ -136,6 +139,7 @@ namespace GameManager
         {
             if (_checkedInCount == _numberOfPlayers)
             {
+//                _timer.Enabled = false;
                 return true;
             }
             return false;
