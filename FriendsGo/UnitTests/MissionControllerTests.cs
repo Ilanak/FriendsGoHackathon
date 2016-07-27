@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using GoogleApi.Entities.Common;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using GameManager;
@@ -110,7 +111,21 @@ namespace UnitTests
         public void GetAllUsersGroupsTest()
         {
             var groups = DocDbUtils.DocDbApi.GetUsersGroups(userId);
-            var y = 1;
+        }
+
+        [TestMethod]
+        public void GetAllGroupsTest()
+        {
+            var groups = DocDbUtils.DocDbApi.GetAllGroups();
+            var statList = groups.OrderByDescending(grp => grp.Level);
+        }
+
+        [TestMethod]
+        public void GetTopGroups()
+        {
+            var topGroups = DocDbUtils.DocDbApi.getStats();
+            var groups = DocDbUtils.DocDbApi.GetAllGroups();
+            var statList = groups.OrderByDescending(grp => grp.Level);
         }
     }
 }
