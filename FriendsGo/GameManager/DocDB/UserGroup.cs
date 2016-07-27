@@ -11,7 +11,7 @@ namespace Shared
 
         public UserGroup(string groupId, string userId)
         {
-            TelegramId = Guid.NewGuid().ToString();
+            TelegramId = string.Format("{0}_{1}", userId, groupId);
             GroupId = groupId;
             UserId = userId;
         }

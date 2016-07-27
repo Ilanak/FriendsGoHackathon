@@ -5,11 +5,14 @@ using GoogleApi;
 using GoogleApi.Entities.Common;
 using GoogleApi.Entities.Places.Search.Common.Enums;
 using GoogleApi.Entities.Places.Search.NearBy.Request;
+using Newtonsoft.Json;
 
 namespace GameManager
 {
-    public class Mission 
+    [JsonConverter(typeof(UserConverter))]
+    public class Mission
     {
+        
         public Mission()
         {
             SubMissions = new List<SubMission>();
@@ -58,7 +61,7 @@ namespace GameManager
                 case SubMissionType.CityLocation:
                     return new CityLocationSubMission(level, startLocation, numberCheckInRequired, checkInCycleDuration);
                 default:
-                        throw new ArgumentException();
+                    throw new ArgumentException();
             }
         }
     }
@@ -202,5 +205,22 @@ namespace GameManager
         CityLocation = 2,
         CountryLocation = 3
     }
-    
+
+    public class UserConverter : JsonConverter
+    {
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            writer.WriteValue(value);
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            return reader.Value;
+        }
+
+        public override bool CanConvert(Type objectType)
+        {
+            return true;
+        }
+    }
 }
