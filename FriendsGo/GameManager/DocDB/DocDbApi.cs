@@ -193,21 +193,10 @@ namespace DocDbUtils
         {
             return string.Format("{0}_{1}", userId, groupId);
         }
-        private static void ReplaceEntity<T>(string databaseName, string collectionName, string telegramId, T updatedEntity)
+        private static async void ReplaceEntity<T>(string databaseName, string collectionName, string telegramId, T updatedEntity)
         {
-            try
-            {
-                var uri = UriFactory.CreateDocumentUri(databaseName, collectionName, telegramId);
-                client.ReplaceDocumentAsync(uri, updatedEntity).Wait();
-            }
-            catch (DocumentClientException de)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
+            var uri = UriFactory.CreateDocumentUri(databaseName, collectionName, telegramId);
+            var result = await client.ReplaceDocumentAsync(uri, updatedEntity);
         }
 
         private static List<T> GetEntityById<T>(string databaseName, string collectionName, string entityTelegramId = null) where T : DocDbEntityBase

@@ -3,7 +3,10 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
+using System.Web;
 using System.Web.Http;
 using DocDbUtils;
 using GameManager;
@@ -56,10 +59,17 @@ namespace GameManagerWebApi.Controllers
                 await DocDbApi.CreateUser(new BotUser(user.Id, user.Name));
             }
 
-            
-            await DocDbApi.AddUserGroups(telegramUser.TelegramId, group.TelegramId);
-            Trace.TraceInformation($"{user.Name} successfully joined FriendsGo group {gameId}!");
-            return $"{user.Name} successfully joined FriendsGo group {gameId}!";
+            if (DocDbApi.GetUserGroupById(user.Id, gameId) == null)
+            {
+                await DocDbApi.AddUserGroups(user.Id, gameId);
+                Trace.TraceInformation($"{user.Name} successfully joined FriendsGo group {gameId}!");
+                return $"{user.Name} successfully joined FriendsGo group {gameId}!";
+            }
+            else
+            {
+                Trace.TraceInformation($"{user.Name} already joined {gameId}!");
+                return $"{user.Name} already joined {gameId}!";
+            }
         }
 
         [HttpPost]
@@ -81,7 +91,7 @@ namespace GameManagerWebApi.Controllers
 
         [HttpGet]
         [Route("{gameId}/mission")]
-        public string GetMission(string gameId)
+        public HttpResponseMessage GetMission(string gameId)
         {
             var group = DocDbApi.GetGroupById(gameId);
 
@@ -89,7 +99,7 @@ namespace GameManagerWebApi.Controllers
             {
                 Mission mission;
 
-                //if (group.GetCurrentMission() == null)
+                if (group.GetCurrentMission() == null)
                 {
                     mission = MissionController.GetMission(group.Level, group.StartLocation, new List<Location>() { group.StartLocation });
 
@@ -97,14 +107,17 @@ namespace GameManagerWebApi.Controllers
 
                     DocDbApi.UpdateGroup(group.TelegramId, group);
                 }
-                /*else
+                else
                 {
                     mission = group.GetCurrentMission();
-                }*/
-                
-                return $"Group {group.TelegramId} is on level {group.Level}. " + Environment.NewLine +
-                           $"Your current missions are:" + Environment.NewLine +
-                           $"{string.Join(Environment.NewLine, mission.SubMissions.Select(s => s.Description))}";
+                }
+
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent($"Group {group.TelegramId} is on level {group.Level}. " + Environment.NewLine +
+                              $"Your current missions are:" + Environment.NewLine +
+                              $"{string.Join(Environment.NewLine, mission.SubMissions.Select(s => s.Description))}")
+                };
             }
 
             throw new ArgumentException($"Group {gameId} does not exist!");
