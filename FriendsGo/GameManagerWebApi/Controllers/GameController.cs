@@ -54,8 +54,8 @@ namespace GameManagerWebApi.Controllers
                 await DocDbApi.CreateUser(new BotUser(user.Id, user.Name));
             }
 
-            // TODO: Connect user id to game
-
+            
+            await DocDbApi.AddUserGroups(telegramUser.TelegramId, group.TelegramId);
             return $"{user.Name} successfully joined FriendsGo group {gameId}!";
         }
 
@@ -138,13 +138,13 @@ namespace GameManagerWebApi.Controllers
 
                 if (mission != null)
                 {
-                    var validationResult = mission.validateLocation(location.ToLocation());
+                    var validationResult = mission.ValidateLocation(location.ToLocation());
 
                     if (validationResult)
                     {
                         result += $"Check-in successfull for game {States[userId].Item1}!"; ;
 
-                        var completeRsult = mission.isCompleted();
+                        var completeRsult = mission.IsCompleted();
 
                         if (completeRsult)
                         {

@@ -94,9 +94,15 @@ namespace UnitTests
         }
 
         [TestMethod]
-        public void AddGroupUser()
+        public void AddUserGroup()
         {
             DocDbUtils.DocDbApi.AddUserGroups(groupId, userId).Wait();
+        }
+
+        [TestMethod]
+        public void DeleteUserGroup()
+        {
+            DocDbUtils.DocDbApi.DeleteUserGroup(userId, groupId);
         }
     }
 }
