@@ -8,6 +8,7 @@ using System.Security.Policy;
 using GameManager;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
+using Newtonsoft.Json;
 using Shared;
 
 namespace DocDbUtils
@@ -20,8 +21,10 @@ namespace DocDbUtils
         private const string DatabaseName = "FriendsGo";
         private const string UsersCollectionName = "Users";
         private const string GroupsCollectionName = "Groups";
+        private const string UserGroupCollectionName = "UsersGroups";
 
         private static DocumentClient client;
+        public static Exception UserOrGroupNotFoundException { get; set; }
 
         /// <summary>
         ///  creates group in docDB groups collection
@@ -72,6 +75,23 @@ namespace DocDbUtils
         {
             DeleteDocument(DatabaseName, GroupsCollectionName, telemgramId).Wait();
         }
+        public static void DeleteUser(string telemgramId)
+        {
+            DeleteDocument(DatabaseName, UsersCollectionName, telemgramId).Wait();
+        }
+
+        public static async Task AddUserGroups(string groupId, string userId)
+        {
+            var user = GetUserById(userId);
+            var group = GetGroupById(groupId);
+            if (user == null || group == null)
+            {
+                throw UserOrGroupNotFoundException;
+            }
+
+            var userGroup = new UserGroup(groupId: groupId, userId: userId);
+            await CreateuserGroupDocumentIfNotExistsAsync(DatabaseName, UserGroupCollectionName, userGroup);
+        }
 
         private static async Task ReplaceEntity<T>(string databaseName, string collectionName, string telegramId, T updatedEntity)
         {
@@ -90,7 +110,7 @@ namespace DocDbUtils
             }
         }
 
-        private static List<T> GetEntityById<T>(string databaseName, string collectionName, string entityTelegramId) where T:DocDbEntityBase
+        private static List<T> GetEntityById<T>(string databaseName, string collectionName, string entityTelegramId) where T : DocDbEntityBase
         {
             FeedOptions queryOptions = new FeedOptions { MaxItemCount = -1 };
             IQueryable<T> query = client.CreateDocumentQuery<T>(
@@ -186,36 +206,23 @@ namespace DocDbUtils
         {
             try
             {
-                    client.ReadDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(databaseName,
-                        collectionName)).Wait();
-            }
-            catch (DocumentClientException de)
-            {
-                // If the document collection does not exist, create a new collection
-                if (de.StatusCode == HttpStatusCode.NotFound)
-                {
-                    DocumentCollection collectionInfo = new DocumentCollection();
-                    collectionInfo.Id = collectionName;
+                var uri = UriFactory.CreateDocumentCollectionUri(databaseName, collectionName);
+                client.ReadDocumentCollectionAsync(uri).Wait();
 
-                    // Configure collections for maximum query flexibility including string range queries.
-                    collectionInfo.IndexingPolicy = new IndexingPolicy(new RangeIndex(DataType.String) {Precision = -1});
-
-                    // Here we create a collection with 400 RU/s.
-                    await client.CreateDocumentCollectionAsync(
-                        UriFactory.CreateDatabaseUri(databaseName),
-                        collectionInfo,
-                        new RequestOptions {OfferThroughput = 400});
-
-                    WriteToConsoleAndPromptToContinue("Created {0}", collectionName);
-                }
-                else
-                {
-                    throw;
-                }
             }
             catch (Exception ex)
             {
-                throw;
+                DocumentCollection collectionInfo = new DocumentCollection();
+                collectionInfo.Id = collectionName;
+
+                // Configure collections for maximum query flexibility including string range queries.
+                collectionInfo.IndexingPolicy = new IndexingPolicy(new RangeIndex(DataType.String) { Precision = -1 });
+
+                // Here we create a collection with 400 RU/s.
+                client.CreateDocumentCollectionAsync(
+                    UriFactory.CreateDatabaseUri(databaseName),
+                    collectionInfo,
+                    new RequestOptions { OfferThroughput = 400 }).Wait();
             }
         }
 
@@ -230,6 +237,25 @@ namespace DocDbUtils
                 if (de.StatusCode == HttpStatusCode.NotFound)
                 {
                     await client.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(databaseName, collectionName), user);
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
+
+        private static async Task CreateuserGroupDocumentIfNotExistsAsync(string databaseName, string collectionName, UserGroup userGroup)
+        {
+            try
+            {
+                await client.ReadDocumentAsync(UriFactory.CreateDocumentUri(databaseName, collectionName, userGroup.GroupId));
+            }
+            catch (DocumentClientException de)
+            {
+                if (de.StatusCode == HttpStatusCode.NotFound)
+                {
+                    await client.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(databaseName, collectionName), userGroup);
                 }
                 else
                 {
