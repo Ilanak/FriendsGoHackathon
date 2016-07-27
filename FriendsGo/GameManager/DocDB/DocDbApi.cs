@@ -40,7 +40,7 @@ namespace DocDbUtils
 
         public static void DeleteUser(string telemgramId)
         {
-            DeleteDocument(DatabaseName, UsersCollectionName, telemgramId).Wait();
+            DeleteDocument(DatabaseName, UsersCollectionName, telemgramId);
         }
 
         /// <summary>
@@ -53,9 +53,14 @@ namespace DocDbUtils
             return GetEntityById<BotUser>(DatabaseName, UsersCollectionName, id).FirstOrDefault();
         }
 
+        /// <summary>
+        ///  update user by Id
+        /// </summary>
+        /// <param name="telegramId"></param>
+        /// <param name="user"></param>
         public static void UpdateUser(string telegramId, BotUser user)
         {
-            ReplaceEntity(DatabaseName, GroupsCollectionName, telegramId, user).Wait();
+            ReplaceEntity(DatabaseName, GroupsCollectionName, telegramId, user);
         }
         #endregion
 
@@ -83,18 +88,19 @@ namespace DocDbUtils
 
         public static void UpdateGroup(string telegramId, Group newGroup)
         {
-            ReplaceEntity(DatabaseName, GroupsCollectionName, telegramId, newGroup).Wait();
+            ReplaceEntity(DatabaseName, GroupsCollectionName, telegramId, newGroup);
         }
 
         public static void DeleteGroup(string telemgramId)
         {
-            DeleteDocument(DatabaseName, GroupsCollectionName, telemgramId).Wait();
+            DeleteDocument(DatabaseName, GroupsCollectionName, telemgramId);
         }
 
         #endregion
 
         #region UserGroupsApi
-        public static async Task AddUserGroups(string groupId, string userId)
+
+        public static async Task AddUserGroups(string userId , string groupId)
         {
             var user = GetUserById(userId);
             var group = GetGroupById(groupId);
@@ -103,7 +109,7 @@ namespace DocDbUtils
                 throw UserOrGroupNotFoundException;
             }
 
-            var userGroup = new UserGroup(groupId: groupId, userId: userId);
+            var userGroup = new UserGroup(userId: userId ,groupId: groupId);
             await CreateuserGroupDocumentIfNotExistsAsync(DatabaseName, UserGroupCollectionName, userGroup);
         }
 
@@ -113,14 +119,38 @@ namespace DocDbUtils
         /// <param name="userId">groupd id </param>
         /// /// <param name="groupId">groupd id </param>
         /// <returns>selected group if exists</returns>
-        public static Group GetUserGroupById(string userId, string groupId)
+        public static UserGroup GetUserGroupById(string userId, string groupId)
         {
-            return GetEntityById<Group>(DatabaseName, UserGroupCollectionName, GetUserGroupId(userId, groupId)).FirstOrDefault();
+            return GetEntityById<UserGroup>(DatabaseName, UserGroupCollectionName, GetUserGroupId(userId, groupId)).FirstOrDefault();
         }
 
         public static void DeleteUserGroup(string userId , string groupId)
         {
-            DeleteDocument(DatabaseName, UserGroupCollectionName, GetUserGroupId(userId,groupId)).Wait();
+            DeleteDocument(DatabaseName, UserGroupCollectionName, GetUserGroupId(userId, groupId));
+        }
+
+        public static List<UserGroup> GetUsersGroups(string userId)
+        {
+            FeedOptions queryOptions = new FeedOptions { MaxItemCount = -1 };
+            IQueryable<UserGroup> query = client.CreateDocumentQuery<UserGroup>(
+                    UriFactory.CreateDocumentCollectionUri(DatabaseName, UserGroupCollectionName), queryOptions)
+                    .Where(entity => (entity.TelegramId.Contains(userId)));
+
+            var groups = query.ToList();
+
+            return groups.Where(grp => grp.UserId == userId).ToList();
+        }
+
+        public static List<UserGroup> GetGroupsUsers(string groupId)
+        {
+            FeedOptions queryOptions = new FeedOptions { MaxItemCount = -1 };
+            IQueryable<UserGroup> query = client.CreateDocumentQuery<UserGroup>(
+                    UriFactory.CreateDocumentCollectionUri(DatabaseName, UserGroupCollectionName), queryOptions)
+                    .Where(entity => (entity.TelegramId.Contains(groupId)));
+
+            var groups = query.ToList();
+
+            return groups.Where(grp => grp.GroupId == groupId).ToList();
         }
 
         #endregion
@@ -129,7 +159,7 @@ namespace DocDbUtils
         {
             return string.Format("{0}_{1}", userId, groupId);
         }
-        private static async Task ReplaceEntity<T>(string databaseName, string collectionName, string telegramId, T updatedEntity)
+        private static void ReplaceEntity<T>(string databaseName, string collectionName, string telegramId, T updatedEntity)
         {
             try
             {
@@ -156,7 +186,7 @@ namespace DocDbUtils
             return query.ToList();
         }
 
-        private static async Task DeleteDocument(string databaseName, string collectionName, string documentName)
+        private static void DeleteDocument(string databaseName, string collectionName, string documentName)
         {
             try
             {
@@ -192,29 +222,9 @@ namespace DocDbUtils
             }
         }
 
-        public static async void CreateCollection(string name)
+        public static void CreateCollection(string name)
         {
-            await CreateDocumentCollectionIfNotExistsAsync(DatabaseName, name);
-        }
-        private static async Task GetStartedDemo()
-        {
-
-            //await this.CreateDatabaseIfNotExists("Users");
-            //await this.CreateDocumentCollectionIfNotExistsAsync(DatabaseName, "Users");
-            //await this.CreateDocumentCollectionIfNotExistsAsync("FriendsGo", "Groups");
-
-            //var user = new BotUser("testUser");
-            //var group = new Group(new Location(0,0));
-            //await this.CreateBotUserDocumentIfNotExistsAsync("FriendsGo", "Users", user);
-            //await this.CreateGroupDocumentIfNotExistsAsync("FriendsGo", "Groups", group);
-
-        }
-
-        private static void WriteToConsoleAndPromptToContinue(string format, params object[] args)
-        {
-            Console.WriteLine(format, args);
-            Console.WriteLine("Press any key to continue ...");
-            Console.ReadKey();
+            CreateDocumentCollectionIfNotExists(DatabaseName, name);
         }
 
         private static async Task CreateDatabaseIfNotExists(string databaseName)
@@ -238,7 +248,7 @@ namespace DocDbUtils
             }
         }
 
-        private static async Task CreateDocumentCollectionIfNotExistsAsync(string databaseName, string collectionName)
+        private static void CreateDocumentCollectionIfNotExists(string databaseName, string collectionName)
         {
             try
             {
