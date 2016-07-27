@@ -20,12 +20,12 @@ namespace GameManager
 
         public List<SubMission> SubMissions;
 
-        public bool validateLocation(Location loc)
+        public bool ValidateLocation(Location loc)
         {
             bool validated = false;
             foreach (var subMission in SubMissions)
             {
-                if (subMission.validateLocation(loc))
+                if (subMission.ValidateLocation(loc))
                 {
                     validated = true;
                     break;
@@ -35,12 +35,12 @@ namespace GameManager
 
         }
 
-        public bool isCompleted()
+        public bool IsCompleted()
         {
             bool completed = true;
             foreach (var subMission in SubMissions)
             {
-                if (!subMission.isCompleted())
+                if (!subMission.IsCompleted())
                 {
                     completed = false;
                 }
@@ -52,12 +52,14 @@ namespace GameManager
     public static class SubMissionsFactory
     {
 
-        public static SubMission Create(SubMissionType type, int level, Location startLocation)
+        public static SubMission Create(SubMissionType type, int level, Location startLocation, int numberCheckInRequired, int meterRadius, int checkInCycleDuration)
         {
             switch (type)
             {
                 case SubMissionType.ExactLocation:
-                    return new ExactLocationSubMission(level, startLocation);
+                    return new ExactLocationSubMission(level, startLocation, numberCheckInRequired, meterRadius, checkInCycleDuration);
+                case SubMissionType.CityLocation:
+                    return new CityLocationSubMission(level, startLocation, numberCheckInRequired, checkInCycleDuration);
                 default:
                     throw new ArgumentException();
             }
@@ -66,28 +68,15 @@ namespace GameManager
 
     public abstract class SubMission
     {
-        protected const int MAX_PLAYERS_AMOUNT = 100;
-
-        public Dictionary<int, int> PlayersAmount = new Dictionary<int, int>()
-        {
-            {1, 1},
-            {2, 1},
-            {3, 2},
-            {4, 2},
-            {5, 3},
-            {6, 3},
-            {7, 3},
-            {8, 3}
-        };
-
+        protected const int MaxPlayersAmount = 100;
 
         protected const string ApiKey = "AIzaSyA5t84tAgn_fgRCXM1ROaOjcEfRiMG4AZ8";
 
         public string Description;
 
-        public abstract bool validateLocation(Location loc);
+        public abstract bool ValidateLocation(Location loc);
 
-        public abstract bool isCompleted();
+        public abstract bool IsCompleted();
 
 
     }
@@ -95,21 +84,24 @@ namespace GameManager
 
     public class ExactLocationSubMission : SubMission
     {
-        private int NumberOfPlayers;
-
+        public int NumberOfPlayers;
+        
         //for in process validation
-        private int checkedInCount;
+        private int _checkedInCount;
+        private int _checkInCycleDuration;
 
-        private List<bool> checkedIn = new List<bool>(MAX_PLAYERS_AMOUNT);
+
+        private List<bool> checkedIn = new List<bool>(MaxPlayersAmount);
 
         public Location ExactLocation;
 
         public TimeSpan Duration;
 
-        public ExactLocationSubMission(int level, Location startLocation)
+        public ExactLocationSubMission(int level, Location startLocation, int numberCheckInRequired, int meterRadius, int checkInCycleDuration)
         {
-            NumberOfPlayers = PlayersAmount[level];
-            checkedInCount = 0;
+            NumberOfPlayers = numberCheckInRequired;
+            _checkedInCount = 0;
+            _checkInCycleDuration = checkInCycleDuration;
 
             var placesRequest = new PlacesNearBySearchRequest()
             {
@@ -117,19 +109,12 @@ namespace GameManager
                 Sensor = true,
                 Language = "en",
                 Location = startLocation,
-                Radius = level*50,
+                Radius = meterRadius,
                 Keyword = "*",
                 Types = new List<SearchPlaceType>()
                 {
-                    SearchPlaceType.BAR,
-                    SearchPlaceType.FOOD,
-                    SearchPlaceType.CLOTHING_STORE,
-                    SearchPlaceType.RESTAURANT,
-                    SearchPlaceType.GYM,
-                    SearchPlaceType.CAFE,
-                    SearchPlaceType.UNIVERSITY,
-                    SearchPlaceType.SCHOOL,
-                    SearchPlaceType.MOVIE_THEATER
+                    SearchPlaceType.BAR, SearchPlaceType.FOOD, SearchPlaceType.CLOTHING_STORE, SearchPlaceType.RESTAURANT,
+                    SearchPlaceType.GYM, SearchPlaceType.CAFE, SearchPlaceType.UNIVERSITY, SearchPlaceType.SCHOOL, SearchPlaceType.MOVIE_THEATER
                 }
             };
 
@@ -149,17 +134,66 @@ namespace GameManager
             Duration = TimeSpan.MaxValue;
         }
 
-        public override bool validateLocation(Location loc)
+        public override bool ValidateLocation(Location loc)
         {
             //if location meets creteria
-            checkedInCount++;
+            _checkedInCount++;
             return true;
             //else false;
         }
 
-        public override bool isCompleted()
+        public override bool IsCompleted()
         {
-            if (checkedInCount == NumberOfPlayers)
+            if (_checkedInCount == NumberOfPlayers)
+            {
+                return true;
+            }
+            return false;
+        }
+    }
+
+    public class CityLocationSubMission : SubMission
+    {
+        public int NumberOfPlayers;
+
+        //for in process validation
+        private int _checkedInCount;
+        private int _checkInCycleDuration;
+        private string _city;
+
+
+        private List<bool> checkedIn = new List<bool>(MaxPlayersAmount);
+
+        public Location ExactLocation;
+
+        public TimeSpan Duration;
+
+        public CityLocationSubMission(int level, Location startLocation, int numberCheckInRequired,
+            int checkInCycleDuration)
+        {
+            NumberOfPlayers = numberCheckInRequired;
+            _checkedInCount = 0;
+            _checkInCycleDuration = checkInCycleDuration;
+
+            _city = "Haifa";
+
+            Description = string.Format("Your mission: {0} players have to checkin to {1}!",
+                NumberOfPlayers, _city);
+
+
+        }
+
+        public override bool ValidateLocation(Location loc)
+        {
+            //if location meets creteria
+            _checkedInCount++;
+            return true;
+            //else false;
+        }
+
+        public override bool IsCompleted()
+        {
+            if (_checkedInCount == NumberOfPlayers)
             {
                 return true;
             }
