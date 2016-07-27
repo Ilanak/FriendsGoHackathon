@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Timers;
 using GoogleApi;
 using GoogleApi.Entities.Common;
 using GoogleApi.Entities.Places.Search.Common.Enums;
@@ -13,13 +14,15 @@ namespace GameManager
     [JsonConverter(typeof(UserConverter))]
     public class Mission
     {
-        
+        public List<Location> ValidatedLocations;
+        public List<SubMission> SubMissions;
+
         public Mission()
         {
             SubMissions = new List<SubMission>();
+            ValidatedLocations = new List<Location>();
         }
 
-        public List<SubMission> SubMissions;
 
         public bool ValidateLocation(Location loc, string userId)
         {
@@ -29,6 +32,7 @@ namespace GameManager
                 if (subMission.ValidateLocation(loc, userId))
                 {
                     validated = true;
+                    ValidatedLocations.Add(loc);
                     break;
                 }
             }
@@ -85,13 +89,15 @@ namespace GameManager
         private Dictionary<string, bool> checkIns;
         private int _checkedInCount;
         private int _numberOfPlayers;
+        private int _checkInCycleDuration;
+        private static System.Timers.Timer _timer;
 
-        public SubMissionBase(int numPlayers)
+        public SubMissionBase(int numPlayers, int checkInCycleDuration)
         {
-
             checkIns = new Dictionary<string, bool>();
             _checkedInCount = 0;
             _numberOfPlayers = numPlayers;
+            _checkInCycleDuration = checkInCycleDuration;
         }
 
         protected virtual bool ValidateLocation(Location loc)
@@ -100,12 +106,22 @@ namespace GameManager
         }
 
 
+        private static void OnTimedEvent(object source, ElapsedEventArgs e)
+        {
+            Console.WriteLine("The Elapsed event was raised at {0}", e.SignalTime);
+        }
+
+
         public override bool ValidateLocation(Location loc, string userId)
         {
             //if first cehck in set clock!
             if (checkIns.Count == 0)
             {
-                
+//                _timer = new System.Timers.Timer();
+//                // Hook up the Elapsed event for the timer.
+//                _timer.Elapsed += new ElapsedEventHandler(OnTimedEvent);
+//                _timer.Interval = _checkedInCount * 1000 /*to seconds*/;
+//                _timer.Enabled = true;
             }
             if (!checkIns.ContainsKey(userId) && ValidateLocation(loc))
             {
@@ -139,7 +155,7 @@ namespace GameManager
 
         public TimeSpan Duration;
 
-        public ExactLocationSubMission(int level, Location startLocation, int numberCheckInRequired, int meterRadius, int checkInCycleDuration) : base (numberCheckInRequired)
+        public ExactLocationSubMission(int level, Location startLocation, int numberCheckInRequired, int meterRadius, int checkInCycleDuration) : base (numberCheckInRequired, checkInCycleDuration)
         {
             NumberOfPlayers = numberCheckInRequired;
             _checkedInCount = 0;
@@ -202,7 +218,7 @@ namespace GameManager
         public TimeSpan Duration;
 
         public CityLocationSubMission(int level, Location startLocation, int numberCheckInRequired,
-            int checkInCycleDuration) : base (numberCheckInRequired)
+            int checkInCycleDuration) : base (numberCheckInRequired, checkInCycleDuration)
         {
            
             NumberOfPlayers = numberCheckInRequired;
