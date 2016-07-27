@@ -21,7 +21,5 @@ namespace Shared
             Score = 0;
             GeneratedMissions = new Dictionary<int, Mission>();
         }
-
-
     }
 }
