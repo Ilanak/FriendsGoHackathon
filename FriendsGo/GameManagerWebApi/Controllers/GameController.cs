@@ -86,7 +86,7 @@ namespace GameManagerWebApi.Controllers
             {
                 Mission mission;
 
-                if (group.GeneratedMissions[group.Level] == null)
+                if (group.GetCurrentMission() == null)
                 {
                     mission = MissionController.GetMission(group.Level, group.StartLocation, new List<Location>() {});
 
@@ -121,7 +121,7 @@ namespace GameManagerWebApi.Controllers
                 var groupId = States[userId].Item1;
                 var group = DocDbApi.GetGroupById(groupId);
 
-                group.StartLocation = new Location(Convert.ToDouble(location.Latitude), Convert.ToDouble(location.Longtitude));
+                group.StartLocation = location.ToLocation();
 
                 // TODO: Update group with location
 
@@ -129,6 +129,22 @@ namespace GameManagerWebApi.Controllers
             }
             else if (States[userId].Item2 == UserState.Checkin)
             {
+                var groupId = States[userId].Item1;
+                var group = DocDbApi.GetGroupById(groupId);
+
+                var mission = group.GetCurrentMission();
+
+                if (mission != null)
+                {
+                    var validationResult = mission.validateLocation(location.ToLocation());
+
+                    if (validationResult)
+                    { 
+
+
+                    }
+                }
+                
                 result = $"{userId} has checked-in for game {States[userId].Item1}!";
             }
             else
@@ -144,7 +160,7 @@ namespace GameManagerWebApi.Controllers
         [Route("{gameId}/stat")]
         public void Stat(string groupId)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
     }
 
@@ -159,5 +175,10 @@ namespace GameManagerWebApi.Controllers
         public string UserId;
         public string Latitude;
         public string Longtitude;
+
+        public Location ToLocation()
+        {
+            return new Location(Convert.ToDouble(Latitude), Convert.ToDouble(Longtitude));
+        }
     }
 }
