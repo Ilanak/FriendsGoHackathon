@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using GoogleApi;
 using GoogleApi.Entities.Common;
@@ -20,12 +21,12 @@ namespace GameManager
 
         public List<SubMission> SubMissions;
 
-        public bool ValidateLocation(Location loc)
+        public bool ValidateLocation(Location loc, string userId)
         {
             bool validated = false;
             foreach (var subMission in SubMissions)
             {
-                if (subMission.ValidateLocation(loc))
+                if (subMission.ValidateLocation(loc, userId))
                 {
                     validated = true;
                     break;
@@ -68,21 +69,65 @@ namespace GameManager
 
     public abstract class SubMission
     {
-        protected const int MaxPlayersAmount = 100;
-
         protected const string ApiKey = "AIzaSyA5t84tAgn_fgRCXM1ROaOjcEfRiMG4AZ8";
 
         public string Description;
 
-        public abstract bool ValidateLocation(Location loc);
+        public abstract bool ValidateLocation(Location loc, string userId);
 
         public abstract bool IsCompleted();
 
 
     }
 
+    public class SubMissionBase : SubMission
+    {
+        private Dictionary<string, bool> checkIns;
+        private int _checkedInCount;
+        private int _numberOfPlayers;
 
-    public class ExactLocationSubMission : SubMission
+        public SubMissionBase(int numPlayers)
+        {
+
+            checkIns = new Dictionary<string, bool>();
+            _checkedInCount = 0;
+            _numberOfPlayers = numPlayers;
+        }
+
+        protected virtual bool ValidateLocation(Location loc)
+        {
+            return true;
+        }
+
+
+        public override bool ValidateLocation(Location loc, string userId)
+        {
+            //if first cehck in set clock!
+            if (checkIns.Count == 0)
+            {
+                
+            }
+            if (!checkIns.ContainsKey(userId) && ValidateLocation(loc))
+            {
+                checkIns[userId] = true;
+                _checkedInCount ++;
+                return true;
+            }
+            return false;
+        }
+
+        public override bool IsCompleted()
+        {
+            if (_checkedInCount == _numberOfPlayers)
+            {
+                return true;
+            }
+            return false;
+        }
+    }
+
+
+    public class ExactLocationSubMission : SubMissionBase
     {
         public int NumberOfPlayers;
         
@@ -90,14 +135,11 @@ namespace GameManager
         private int _checkedInCount;
         private int _checkInCycleDuration;
 
-
-        private List<bool> checkedIn = new List<bool>(MaxPlayersAmount);
-
         public Location ExactLocation;
 
         public TimeSpan Duration;
 
-        public ExactLocationSubMission(int level, Location startLocation, int numberCheckInRequired, int meterRadius, int checkInCycleDuration)
+        public ExactLocationSubMission(int level, Location startLocation, int numberCheckInRequired, int meterRadius, int checkInCycleDuration) : base (numberCheckInRequired)
         {
             NumberOfPlayers = numberCheckInRequired;
             _checkedInCount = 0;
@@ -134,7 +176,7 @@ namespace GameManager
             Duration = TimeSpan.MaxValue;
         }
 
-        public override bool ValidateLocation(Location loc)
+        protected override bool ValidateLocation(Location loc)
         {
             //if location meets creteria
             _checkedInCount++;
@@ -142,17 +184,9 @@ namespace GameManager
             //else false;
         }
 
-        public override bool IsCompleted()
-        {
-            if (_checkedInCount == NumberOfPlayers)
-            {
-                return true;
-            }
-            return false;
-        }
     }
 
-    public class CityLocationSubMission : SubMission
+    public class CityLocationSubMission : SubMissionBase
     {
         public int NumberOfPlayers;
 
@@ -161,21 +195,23 @@ namespace GameManager
         private int _checkInCycleDuration;
         private string _city;
 
-
-        private List<bool> checkedIn = new List<bool>(MaxPlayersAmount);
+        private  List<string> Cities = new List<string>() {"Haifa", "Jerusalem", "BeerSheva"};
 
         public Location ExactLocation;
 
         public TimeSpan Duration;
 
         public CityLocationSubMission(int level, Location startLocation, int numberCheckInRequired,
-            int checkInCycleDuration)
+            int checkInCycleDuration) : base (numberCheckInRequired)
         {
+           
             NumberOfPlayers = numberCheckInRequired;
             _checkedInCount = 0;
             _checkInCycleDuration = checkInCycleDuration;
 
-            _city = "Haifa";
+            Random rand = new Random();
+            int cityRand = rand.Next(0, Cities.Count - 1);
+            _city = Cities[cityRand];
 
             Description = string.Format("Your mission: {0} players have to checkin to {1}!",
                 NumberOfPlayers, _city);
@@ -183,20 +219,19 @@ namespace GameManager
 
         }
 
-        public override bool ValidateLocation(Location loc)
+        protected override bool ValidateLocation(Location loc)
         {
             //if location meets creteria
-            _checkedInCount++;
-            return true;
-            //else false;
-        }
-
-        public override bool IsCompleted()
-        {
-            if (_checkedInCount == NumberOfPlayers)
+            var userCity = MissionController.GetCityByCoordinates(loc.Latitude, loc.Longitude);
+            if (userCity.Equals(_city, StringComparison.InvariantCultureIgnoreCase))
             {
+                Trace.TraceInformation("User city check-in was validated successfully");
+                _checkedInCount++;
                 return true;
             }
+
+
+            Trace.TraceInformation($"Expected city was: {_city} while the user sent {userCity} location");
             return false;
         }
     }
