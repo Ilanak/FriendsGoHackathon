@@ -62,21 +62,23 @@ namespace DocDbUtils
             return GetEntityById<BotUser>(DatabaseName, UsersCollectionName, id).FirstOrDefault();
         }
 
-        //public static void UpdateGroup(string telegramId, Group newGroup)
-        //{
-        //    ReplaceEntity(DatabaseName, GroupsCollectionName, telegramId, newGroup).Wait();
-        //}
-        //private static async Task ReplaceEntity<T>(string databaseName, string collectionName, string telegramId, T updatedEntity)
-        //{
-        //    try
-        //    {
-        //        await client.ReplaceDocumentAsync(UriFactory.CreateDocumentUri(databaseName, collectionName, telegramId), updatedEntity);
-        //    }
-        //    catch (DocumentClientException de)
-        //    {
-        //        throw;
-        //    }
-        //}
+        public static void UpdateGroup(string telegramId, Group newGroup)
+        {
+            ReplaceEntity(DatabaseName, GroupsCollectionName, newGroup.TelegramId, newGroup).Wait();
+        }
+
+        private static async Task ReplaceEntity<T>(string databaseName, string collectionName, string telegramId, T updatedEntity)
+        {
+            try
+            {
+                var uri = UriFactory.CreateDocumentUri(databaseName, collectionName, telegramId);
+                await client.ReplaceDocumentAsync(uri,updatedEntity);
+            }
+            catch (DocumentClientException de)
+            {
+                throw;
+            }
+        }
 
         private static List<T> GetEntityById<T>(string databaseName, string collectionName, string entityTelegramId) where T:DocDbEntityBase
         {
@@ -106,11 +108,16 @@ namespace DocDbUtils
                 Console.WriteLine("Error: {0}, Message: {1}", e.Message, baseException.Message);
             }
         }
+
+        public static async void CreateCollection(string name)
+        {
+            await CreateDocumentCollectionIfNotExistsAsync(DatabaseName, name);
+        }
         private static async Task GetStartedDemo()
         {
 
             //await this.CreateDatabaseIfNotExists("Users");
-            //await this.CreateDocumentCollectionIfNotExistsAsync("FriendsGo", "Users");
+            //await this.CreateDocumentCollectionIfNotExistsAsync(DatabaseName, "Users");
             //await this.CreateDocumentCollectionIfNotExistsAsync("FriendsGo", "Groups");
 
             //var user = new BotUser("testUser");
@@ -152,7 +159,8 @@ namespace DocDbUtils
         {
             try
             {
-                await client.ReadDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(databaseName, collectionName));
+                    client.ReadDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(databaseName,
+                        collectionName)).Wait();
             }
             catch (DocumentClientException de)
             {
@@ -163,13 +171,13 @@ namespace DocDbUtils
                     collectionInfo.Id = collectionName;
 
                     // Configure collections for maximum query flexibility including string range queries.
-                    collectionInfo.IndexingPolicy = new IndexingPolicy(new RangeIndex(DataType.String) { Precision = -1 });
+                    collectionInfo.IndexingPolicy = new IndexingPolicy(new RangeIndex(DataType.String) {Precision = -1});
 
                     // Here we create a collection with 400 RU/s.
                     await client.CreateDocumentCollectionAsync(
                         UriFactory.CreateDatabaseUri(databaseName),
                         collectionInfo,
-                        new RequestOptions { OfferThroughput = 400 });
+                        new RequestOptions {OfferThroughput = 400});
 
                     WriteToConsoleAndPromptToContinue("Created {0}", collectionName);
                 }
@@ -177,6 +185,10 @@ namespace DocDbUtils
                 {
                     throw;
                 }
+            }
+            catch (Exception ex)
+            {
+                throw;
             }
         }
 
