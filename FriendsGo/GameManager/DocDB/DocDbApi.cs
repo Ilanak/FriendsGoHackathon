@@ -164,7 +164,7 @@ namespace DocDbUtils
             try
             {
                 var uri = UriFactory.CreateDocumentUri(databaseName, collectionName, telegramId);
-                await client.ReplaceDocumentAsync(uri, updatedEntity);
+                client.ReplaceDocumentAsync(uri, updatedEntity).Wait();
             }
             catch (DocumentClientException de)
             {

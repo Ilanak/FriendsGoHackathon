@@ -159,11 +159,11 @@ namespace GameManager
 
         public TimeSpan Duration;
 
-        public ExactLocationSubMission()
+        public ExactLocationSubMission() : base(0, 0)
         {
         }
 
-        public ExactLocationSubMission(int level, Location startLocation, int numberCheckInRequired, int meterRadius, int checkInCycleDuration)
+        public ExactLocationSubMission(int level, Location startLocation, int numberCheckInRequired, int meterRadius, int checkInCycleDuration) : base(numberCheckInRequired, checkInCycleDuration)
         {
             SubType = SubMissionType.ExactLocation;
             NumberOfPlayers = numberCheckInRequired;
@@ -279,7 +279,7 @@ namespace GameManager
 
         public TimeSpan Duration;
 
-        public CityLocationSubMission()
+        public CityLocationSubMission() : base(0,0)
         {
         }
 
