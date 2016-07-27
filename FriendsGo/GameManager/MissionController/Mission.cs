@@ -20,12 +20,12 @@ namespace GameManager
 
         public List<SubMission> SubMissions;
 
-        public bool ValidateLocation(Location loc)
+        public bool ValidateLocation(Location loc, string userId)
         {
             bool validated = false;
             foreach (var subMission in SubMissions)
             {
-                if (subMission.ValidateLocation(loc))
+                if (subMission.ValidateLocation(loc, userId))
                 {
                     validated = true;
                     break;
@@ -72,15 +72,61 @@ namespace GameManager
 
         public string Description;
 
-        public abstract bool ValidateLocation(Location loc);
+        public abstract bool ValidateLocation(Location loc, string userId);
 
         public abstract bool IsCompleted();
 
 
     }
 
+    public class SubMissionBase : SubMission
+    {
+        private Dictionary<string, bool> checkIns;
+        private int _checkedInCount;
+        private int _numberOfPlayers;
 
-    public class ExactLocationSubMission : SubMission
+        public SubMissionBase(int numPlayers)
+        {
+
+            checkIns = new Dictionary<string, bool>();
+            _checkedInCount = 0;
+            _numberOfPlayers = numPlayers;
+        }
+
+        protected virtual bool ValidateLocation(Location loc)
+        {
+            return true;
+        }
+
+
+        public override bool ValidateLocation(Location loc, string userId)
+        {
+            //if first cehck in set clock!
+            if (checkIns.Count == 0)
+            {
+                
+            }
+            if (!checkIns.ContainsKey(userId) && ValidateLocation(loc))
+            {
+                checkIns[userId] = true;
+                _checkedInCount ++;
+                return true;
+            }
+            return false;
+        }
+
+        public override bool IsCompleted()
+        {
+            if (_checkedInCount == _numberOfPlayers)
+            {
+                return true;
+            }
+            return false;
+        }
+    }
+
+
+    public class ExactLocationSubMission : SubMissionBase
     {
         public int NumberOfPlayers;
         
@@ -92,7 +138,7 @@ namespace GameManager
 
         public TimeSpan Duration;
 
-        public ExactLocationSubMission(int level, Location startLocation, int numberCheckInRequired, int meterRadius, int checkInCycleDuration)
+        public ExactLocationSubMission(int level, Location startLocation, int numberCheckInRequired, int meterRadius, int checkInCycleDuration) : base (numberCheckInRequired)
         {
             NumberOfPlayers = numberCheckInRequired;
             _checkedInCount = 0;
@@ -129,7 +175,7 @@ namespace GameManager
             Duration = TimeSpan.MaxValue;
         }
 
-        public override bool ValidateLocation(Location loc)
+        protected override bool ValidateLocation(Location loc)
         {
             //if location meets creteria
             _checkedInCount++;
@@ -137,17 +183,9 @@ namespace GameManager
             //else false;
         }
 
-        public override bool IsCompleted()
-        {
-            if (_checkedInCount == NumberOfPlayers)
-            {
-                return true;
-            }
-            return false;
-        }
     }
 
-    public class CityLocationSubMission : SubMission
+    public class CityLocationSubMission : SubMissionBase
     {
         public int NumberOfPlayers;
 
@@ -163,7 +201,7 @@ namespace GameManager
         public TimeSpan Duration;
 
         public CityLocationSubMission(int level, Location startLocation, int numberCheckInRequired,
-            int checkInCycleDuration)
+            int checkInCycleDuration) : base (numberCheckInRequired)
         {
            
             NumberOfPlayers = numberCheckInRequired;
@@ -180,21 +218,12 @@ namespace GameManager
 
         }
 
-        public override bool ValidateLocation(Location loc)
+        protected override bool ValidateLocation(Location loc)
         {
             //if location meets creteria
             _checkedInCount++;
             return true;
             //else false;
-        }
-
-        public override bool IsCompleted()
-        {
-            if (_checkedInCount == NumberOfPlayers)
-            {
-                return true;
-            }
-            return false;
         }
     }
 
