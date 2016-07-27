@@ -55,11 +55,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BotUser.cs" />
-    <Compile Include="docDbEntityBase.cs" />
+    <Compile Include="DocDB\BotUser.cs" />
+    <Compile Include="DocDB\docDbEntityBase.cs" />
     <Compile Include="DocDB\DocDbApi.cs" />
-    <Compile Include="DocDB\DocDbApiNew.cs" />
-    <Compile Include="Group.cs" />
+    <Compile Include="DocDB\Group.cs" />
     <Compile Include="MissionController\CheckIn.cs" />
     <Compile Include="MissionController\IMissionController.cs" />
     <Compile Include="MissionController\Mission.cs" />

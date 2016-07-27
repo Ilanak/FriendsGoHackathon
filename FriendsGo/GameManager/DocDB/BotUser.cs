@@ -8,7 +8,7 @@ namespace Shared
     {
         public string UserName { get; set; }
 
-        public BotUser(string id,string userName = "")
+        public BotUser(string id, string userName)
         {
             TelegramId = id;
             UserName = userName;

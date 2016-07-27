@@ -6,9 +6,9 @@ using GoogleApi.Entities.Common;
 using GoogleApi.Entities.Places.Search.Common.Enums;
 using GoogleApi.Entities.Places.Search.NearBy.Request;
 
-namespace MissionController
+namespace GameManager
 {
-    public class Mission
+    public class Mission 
     {
         public Mission()
         {

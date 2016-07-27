@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using GoogleApi.Entities.Common;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MissionController;
+using GameManager;
 using Shared;
 
 namespace UnitTests
@@ -18,7 +18,7 @@ namespace UnitTests
         [TestMethod]
         public void Test()
         {
-            var controller = new MissionController.MissionController();
+            var controller = new MissionController();
 
             var result = controller.GetMission(1, new Location(32.158278, 34.808194), new List<Location>() {});
 

@@ -2,15 +2,14 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
+using System.Threading.Tasks;
 using System.Web.Http;
-using System.Web.Http.Results;
-using System.Web.Services.Protocols;
 using DocDbUtils;
+using GameManager;
+using GoogleApi.Entities.Common;
 using Shared;
 
-namespace GameManagerWeb.Controllers
+namespace GameManagerWebApi.Controllers
 {
 
     [RoutePrefix("api/game")]
@@ -26,7 +25,9 @@ namespace GameManagerWeb.Controllers
 
         // userId -> tuple<gameId, state>
         public static ConcurrentDictionary<string, Tuple<string, UserState>> States = new ConcurrentDictionary<string, Tuple<string, UserState>>();
-            
+
+        public static MissionController MissionController = new MissionController();
+
         [HttpPost]
         [Route("{gameId}/go/{userId}")]
         public string Go(string gameId, string userId)
@@ -37,16 +38,25 @@ namespace GameManagerWeb.Controllers
 
         [HttpPost]
         [Route("{gameId}/join")]
-        public string Join(string gameId, [FromBody] TelegramUser user)
+        public async Task<string> Join(string gameId, [FromBody] TelegramUser user)
         {
             var group = DocDbApi.GetGroupById(gameId);
 
             if (group == null)
             {
-                //DocDbApi.CreateGroup(new Group(gameId, null));
+                await DocDbApi.CreateGroup(new Group(gameId, null));
             }
 
-            return "";
+            var telegramUser = DocDbApi.GetUserById(user.Id);
+
+            if (telegramUser == null)
+            {
+                await DocDbApi.CreateUser(new BotUser(user.Id, user.Name));
+            }
+
+            // TODO: Connect user id to game
+
+            return $"{user.Name} successfully joined FriendsGo group {gameId}!";
         }
 
         [HttpPost]
@@ -54,7 +64,7 @@ namespace GameManagerWeb.Controllers
         public string Cancel(string userId)
         {
             States[userId] = new Tuple<string, UserState>(string.Empty, UserState.None);
-            return "";
+            return "Operation canceled.";
         }
 
         [HttpPost]
@@ -74,10 +84,25 @@ namespace GameManagerWeb.Controllers
 
             if (group != null)
             {
-                return $"Group {group.TelegramId} is on level {group.Level}. Your current mission is to go to BBB!";
+                Mission mission;
+
+                if (group.GeneratedMissions[group.Level] == null)
+                {
+                    mission = MissionController.GetMission(group.Level, group.StartLocation, new List<Location>() {});
+
+                    // TODO: Update group
+                }
+                else
+                {
+                    mission = group.GeneratedMissions[group.Level];
+                }
+                
+                return $"Group {group.TelegramId} is on level {group.Level}. " + Environment.NewLine +
+                           $"Your current missions are:" + Environment.NewLine +
+                           $"{string.Join(Environment.NewLine, mission.SubMissions.Select(s => s.Description))}";
             }
 
-            throw new ArgumentException();
+            throw new ArgumentException($"Group {gameId} does not exist!");
         }
 
         [HttpPost]
@@ -86,13 +111,25 @@ namespace GameManagerWeb.Controllers
         {
             string result;
             var userId = location.UserId;
-            if (States[userId].Item2 == UserState.Go)
+
+            if (States[userId] == null)
             {
-                result =  $"{userId} has GO'ed the game in {States[userId].Item1} group!";
+                return "";
+            }
+            else if (States[userId].Item2 == UserState.Go)
+            {
+                var groupId = States[userId].Item1;
+                var group = DocDbApi.GetGroupById(groupId);
+
+                group.StartLocation = new Location(Convert.ToDouble(location.Latitude), Convert.ToDouble(location.Longtitude));
+
+                // TODO: Update group with location
+
+                result = $"{userId} has GO'ed the game in {group.TelegramId} group!";
             }
             else if (States[userId].Item2 == UserState.Checkin)
             {
-                result =  $"{userId} has checked-in for game {States[userId].Item1}!";
+                result = $"{userId} has checked-in for game {States[userId].Item1}!";
             }
             else
             {
