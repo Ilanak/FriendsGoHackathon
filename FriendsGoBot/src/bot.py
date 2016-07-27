@@ -15,15 +15,15 @@ base_url = 'https://friendsgowebapi.azurewebsites.net/api/Game/'
 def error(bot, update, error):
     logger.warn('Update "%s" caused error "%s"' % (update, error))
 
-def handleCheckinCommand(bot, update):
-    checkin = {}
-    url = base_url + str(abs(update.message.chat_id)) + '/checkin/' + str(abs(update.message.from_user.id))
-    resp = requests.post(url, json=checkin)
+def handleJoinCommand(bot, update):
+    join = {"Name": update.message.from_user.name, "Id": update.message.from_user.id}
+    url = base_url+ str(abs(update.message.chat_id))+'/join'
+    resp = requests.post(url, json=join)
+    if resp.status_code == 200:
+        bot.send_message(update.message.chat_id, str(resp.content))
+    else:
+        bot.send_message(update.message.chat_id, "Error")
 
-    button = telegram.KeyboardButton("Share location", request_location=True)
-    customKeyboard = [[button]]
-    reply_markup = telegram.ReplyKeyboardMarkup(keyboard=customKeyboard, resize_keyboard=True, one_time_keyboard=True)
-    bot.send_message(update.message.from_user.id, "Share your location", reply_markup=reply_markup)
 
 def handleStartGameCommand(bot, update):
     checkin = {}
@@ -35,24 +35,30 @@ def handleStartGameCommand(bot, update):
     reply_markup = telegram.ReplyKeyboardMarkup(keyboard=customKeyboard, resize_keyboard=True, one_time_keyboard=True)
     bot.send_message(update.message.from_user.id, "Share your location", reply_markup=reply_markup)
 
-def handleJoinCommand(bot, update):
-    join = {"Name": update.message.from_user.name, "Id": update.message.from_user.id}
-    url = base_url+ str(abs(update.message.chat_id))+'/join'
-    resp = requests.post(url, json=join)
-    if resp.status_code == 200:
-        bot.send_message(update.message.chat_id, "You joined the game!")
-
 def handleChallengeCommand(bot, update):
     url = base_url + str(abs(update.message.chat_id)) + '/mission'
     resp = requests.get(url)
     if resp.status_code == 200:
-        bot.send_message(update.message.chat_id, resp.jason.dumps())
+        bot.send_message(update.message.chat_id, str(resp.content))
+    else:
+        bot.send_message(update.message.chat_id, "Error")
+
+def handleCheckinCommand(bot, update):
+    checkin = {}
+    url = base_url + str(abs(update.message.chat_id)) + '/checkin/' + str(abs(update.message.from_user.id))
+    resp = requests.post(url, json=checkin)
+
+    button = telegram.KeyboardButton("Share location", request_location=True)
+    customKeyboard = [[button]]
+    reply_markup = telegram.ReplyKeyboardMarkup(keyboard=customKeyboard, resize_keyboard=True, one_time_keyboard=True)
+    bot.send_message(update.message.from_user.id, "Share your location", reply_markup=reply_markup)
 
 def handleStatCommand(bot, update):
-    url = base_url + str(abs(update.message.chat_id)) + '/Stat'
-    resp = requests.get(url)
-    if resp.status_code == 200:
-        bot.send_message(update.message.chat_id, resp.jason.dumps())
+    bot.send_message(update.message.chat_id, "Group status: you are on level XXX, Good job!")
+    #url = base_url + str(abs(update.message.chat_id)) + '/Stat'
+    #resp = requests.get(url)
+    #if resp.status_code == 200:
+    #   bot.send_message(update.message.chat_id, str(resp.content))
 
 #task = {"summary": "Take out trash", "description": "" }
 #resp = requests.post('https://todolist.example.com/tasks/', json=task)
@@ -67,10 +73,15 @@ def handleMyLocationCommand(bot, update):
     location = {"UserId": user ,"Latitude": latitude, "Longitude": longitude}
     url = base_url + '/location'
     resp = requests.post(url, json=location)
-    bot.send_message(update.message.from_user.id, "Thanks.")
-    #if resp.status_code == 200:
-     #   i=5
-        #check for finish mission
+
+    if resp.status_code == 200:
+        bot.send_message(update.message.from_user.id, resp.content)
+
+        #bot.send_message(str(resp.content)
+        #jsonResp = resp.content
+        #bot.send_message(jsonResp["GroupId"], jsonResp["Message"])
+    else:
+        bot.send_message(update.message.chat_id, "Error")
 
 def main():
     updater = Updater(token="269182723:AAG26YGMIwHaSi6oGQUdM2kABsdeMVNKSdA")
