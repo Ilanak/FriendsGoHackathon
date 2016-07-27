@@ -145,6 +145,8 @@ namespace GameManagerWebApi.Controllers
 
                 if (mission != null)
                 {
+                    // for debuging:
+                    //var validationResult = mission.ValidateLocation(location.ToLocation(), userId, debugMode: true);
                     var validationResult = mission.ValidateLocation(location.ToLocation(), userId);
 
                     if (validationResult)
