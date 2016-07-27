@@ -2,13 +2,14 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web.Http;
 using DocDbUtils;
 using GameManager;
 using GoogleApi.Entities.Common;
 using Shared;
 
-namespace GameManagerWeb.Controllers
+namespace GameManagerWebApi.Controllers
 {
 
     [RoutePrefix("api/game")]
@@ -37,16 +38,21 @@ namespace GameManagerWeb.Controllers
 
         [HttpPost]
         [Route("{gameId}/join")]
-        public string Join(string gameId, [FromBody] TelegramUser user)
+        public async Task<string> Join(string gameId, [FromBody] TelegramUser user)
         {
             var group = DocDbApi.GetGroupById(gameId);
 
             if (group == null)
             {
-                DocDbApi.CreateGroup(new Group(gameId, null)).Wait();
+                await DocDbApi.CreateGroup(new Group(gameId, null));
             }
 
-            DocDbApi.CreateUser(new BotUser(user.Id, user.Name)).Wait();
+            var telegramUser = DocDbApi.GetUserById(user.Id);
+
+            if (telegramUser == null)
+            {
+                await DocDbApi.CreateUser(new BotUser(user.Id, user.Name));
+            }
 
             // Connect user id to game
 

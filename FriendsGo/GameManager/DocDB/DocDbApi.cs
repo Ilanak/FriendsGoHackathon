@@ -205,9 +205,9 @@ namespace DocDbUtils
             {
                 await client.ReadDocumentAsync(UriFactory.CreateDocumentUri(databaseName, collectionName, group.TelegramId));
             }
-            catch (DocumentClientException de)
+            catch (Exception de)
             {
-                if (de.StatusCode == HttpStatusCode.NotFound)
+                if (true)
                 {
                     await client.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(databaseName, collectionName), group);
                 }
