@@ -40,7 +40,7 @@ namespace GameManager
 
             foreach (var subMission in SubMissions)
             {
-                message += $"{subMission.LocationDescription}:  {subMission.CheckIns.Count()} / {subMission.NumberOfPlayers} checked in!";
+                message += $"{subMission.LocationDescription}:  {subMission.CheckIns.Count()} / {subMission.NumberOfPlayers} checked in!" + Environment.NewLine;
 
             }
             return message;

@@ -196,7 +196,7 @@ namespace GameManagerWebApi.Controllers
 
                         if (completeRsult)
                         {
-                            message += Environment.NewLine + "Mission completed!!! Type '/mission' to get your next mission!";
+                            message += Environment.NewLine + "Mission completed!!!" + Environment.NewLine + " Type '/mission' to get your next mission!";
 
                             group.Level += 1;
                         }
