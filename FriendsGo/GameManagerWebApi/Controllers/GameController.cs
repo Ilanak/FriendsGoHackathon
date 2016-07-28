@@ -57,7 +57,7 @@ namespace GameManagerWebApi.Controllers
 
             if (group == null)
             {
-                await DocDbApi.CreateGroup(new Group(gameId, null));
+                await DocDbApi.CreateGroup(new Group(gameId, user.Group, null));
             }
 
             var telegramUser = DocDbApi.GetUserById(user.Id);
@@ -250,6 +250,7 @@ namespace GameManagerWebApi.Controllers
     {
         public string Name;
         public string Id;
+        public string Group;
     }
 
     public class UserLocation
