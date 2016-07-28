@@ -45,6 +45,7 @@ namespace GameManagerWebApi.Controllers
         {
             States[userId] = new Tuple<string, UserState>(gameId, UserState.Go);
             Trace.TraceInformation($"user {userId} changed his status to Go");
+            
             return $"State for user {userId} changed to {States[userId]}";
         }
 
@@ -70,12 +71,20 @@ namespace GameManagerWebApi.Controllers
             {
                 await DocDbApi.AddUserGroups(user.Id, gameId);
                 Trace.TraceInformation($"{user.Name} successfully joined FriendsGo group {gameId}!");
-                return new HttpResponseMessage() {Content = new StringContent($"{user.Name} successfully joined FriendsGo group {gameId}!") };
+
+
+                var message = $"{user.Name} successfully joined FriendsGo!";
+                await _botClient.SendTextMessageAsync(gameId, message);
+
+                return new HttpResponseMessage() {Content = new StringContent(message) };
             }
             else
             {
+                var message = $"{user.Name} already joined this FriendsGo group!";
+                await _botClient.SendTextMessageAsync(gameId, message);
+
                 Trace.TraceInformation($"{user.Name} already joined {gameId}!");
-                return new HttpResponseMessage() { Content = new StringContent($"{user.Name} already joined {gameId}!") } ;
+                return new HttpResponseMessage() { Content = new StringContent(message) } ;
             }
         }
 
@@ -84,6 +93,7 @@ namespace GameManagerWebApi.Controllers
         public string Cancel(string userId)
         {
             States[userId] = new Tuple<string, UserState>(string.Empty, UserState.None);
+            
             return "Operation canceled.";
         }
 
@@ -119,11 +129,14 @@ namespace GameManagerWebApi.Controllers
                     mission = group.GetCurrentMission();
                 }
 
+                var message = $"Group {group.TelegramId} is on level {group.Level}. " + Environment.NewLine +
+                              $"Your current missions are:" + Environment.NewLine +
+                              $"{string.Join(Environment.NewLine, mission.SubMissions.Select(s => s.Description))}";
+
+                await _botClient.SendTextMessageAsync(gameId, message);
                 return new HttpResponseMessage(HttpStatusCode.OK)
                 {
-                    Content = new StringContent($"Group {group.TelegramId} is on level {group.Level}. " + Environment.NewLine +
-                              $"Your current missions are:" + Environment.NewLine +
-                              $"{string.Join(Environment.NewLine, mission.SubMissions.Select(s => s.Description))}")
+                    Content = new StringContent(message)    
                 };
             }
 
@@ -154,6 +167,8 @@ namespace GameManagerWebApi.Controllers
                 await DocDbApi.UpdateGroup(group.TelegramId, group);
 
                 message = $"{userId} has GO'ed the game in {group.TelegramId} group!";
+
+                await _botClient.SendTextMessageAsync(groupId, message);
             }
             else if (States[userId].Item2 == UserState.Checkin)
             {
@@ -184,6 +199,7 @@ namespace GameManagerWebApi.Controllers
 
                         await DocDbApi.UpdateGroup(group.TelegramId, group);
 
+                        await _botClient.SendTextMessageAsync(groupId, message);
                     }
                 }
             }
