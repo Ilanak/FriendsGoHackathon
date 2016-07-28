@@ -173,6 +173,7 @@ namespace DocDbUtils
         public static string GetTopGroups()
         {
             var groups = GetAllGroups();
+            
             var statList = groups.OrderByDescending(grp => grp.Level);
             var topGroups = new StringBuilder();
             var place = 1;
@@ -182,7 +183,7 @@ namespace DocDbUtils
 
             foreach (var group in statList)
             {
-                topGroups.AppendFormat("#{0} {1} - level :{2}", place++, group.TelegramId, group.Level);
+                topGroups.AppendFormat("#{0}. {1} - level :{2}", place++, group.GroupName, group.Level);
                 topGroups.AppendLine();
             }
 

@@ -12,17 +12,19 @@ namespace Shared
         public Location StartLocation { get; set; }
         public int Score { get; set; }
         public Dictionary<int, Mission> GeneratedMissions { get; set; }
+        public string GroupName { get; set; }
 
-        public Group(string id, Location location)
+        public Group(string id, string groupName, Location location)
         {
             TelegramId = id;
+            GroupName = groupName;
             CreateDate = DateTime.UtcNow;
             StartLocation = location;
             Score = 0;
             Level = 0;
             GeneratedMissions = new Dictionary<int, Mission>();
         }
-
+        
         public Mission GetCurrentMission()
         {
             if (GeneratedMissions.ContainsKey(Level))

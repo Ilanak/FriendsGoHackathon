@@ -53,7 +53,7 @@ namespace UnitTests
         [TestMethod]
         public void CreateGroupTest()
         {
-            Group grp = new Group(groupId2, null);
+            Group grp = new Group(groupId2, "1234", null);
             DocDbUtils.DocDbApi.CreateGroup(grp);
         }
 
