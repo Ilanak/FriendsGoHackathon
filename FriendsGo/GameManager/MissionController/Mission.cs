@@ -189,7 +189,7 @@ namespace GameManager
 
                 var response = GooglePlaces.NearBySearch.Query(placesRequest);
 
-                if (response.Results.Count() > 0)
+                if (response.Results.Count() > 4)
                 {
 
                     int index = (new Random()).Next(0, response.Results.Count());

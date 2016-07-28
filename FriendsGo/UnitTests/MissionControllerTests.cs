@@ -30,7 +30,7 @@ namespace UnitTests
         {
             var controller = new MissionController();
 
-            var result = controller.GetMission(1, new Location(32.158278, 34.808194), new List<Location>() {});
+            var result = controller.GetMission(6, new Location(32.158278, 34.808194), new List<Location>() { new Location(32.158278, 34.808194) });
 
             Assert.AreEqual(result.SubMissions.Count, 1);
         }
