@@ -40,7 +40,7 @@ namespace GameManager
 
             foreach (var subMission in SubMissions)
             {
-                message += $"{subMission.LocationDescription}:  {subMission.CheckIns.Count()} / {subMission.NumberOfPlayers} checked in!";
+                message += $"{subMission.LocationDescription}:  {subMission.CheckIns.Count()} / {subMission.NumberOfPlayers} checked in!" + Environment.NewLine;
 
             }
             return message;
@@ -121,7 +121,7 @@ namespace GameManager
 
         public override bool ValidateLocation(Location userLocation, string userId, bool debugMode = false)
         {
-            if (!CheckIns.ContainsKey(userId) && ValidateLocation(userLocation))
+            if (CheckIns.ContainsKey(userId) && ValidateLocation(userLocation))
             {
                 CheckIns[userId] = userLocation;
                 return true;
