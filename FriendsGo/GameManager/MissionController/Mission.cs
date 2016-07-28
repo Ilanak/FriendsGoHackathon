@@ -24,14 +24,14 @@ namespace GameManager
         }
 
 
-        public bool ValidateLocation(Location loc, string userId, bool debugMode = false)
+        public LocationValidationStatus ValidateLocation(Location loc, string userId, bool debugMode = false)
         {
-            bool validated = false;
-            if (SubMissions.Any(subMission => subMission.ValidateLocation(loc, userId, debugMode)))
+            if (SubMissions.Any(subMission => subMission.ValidateLocation(loc, userId, debugMode) == LocationValidationStatus.Success))
             {
-                validated = true;
+                 return LocationValidationStatus.Success;
             }
-            return validated;
+
+            return LocationValidationStatus.WrongLocation;
 
         }
         public string MissionStatus()
@@ -87,7 +87,7 @@ namespace GameManager
 
         public SubMissionType SubType;
 
-        public abstract bool ValidateLocation(Location userLocation, string userId, bool debugMode);
+        public abstract LocationValidationStatus ValidateLocation(Location userLocation, string userId, bool debugMode);
 
         public abstract bool IsCompleted();
 
@@ -114,30 +114,30 @@ namespace GameManager
             CheckInCycleDuration = checkInCycleDuration;
         }
 
-        protected virtual bool ValidateLocation(Location userLocation, bool debugMode = false)
+        protected virtual LocationValidationStatus ValidateLocation(Location userLocation, bool debugMode = false)
         {
-            return true;
+            return LocationValidationStatus.Success;
         }
         
 
-        public override bool ValidateLocation(Location userLocation, string userId, bool debugMode = false)
+        public override LocationValidationStatus ValidateLocation(Location userLocation, string userId, bool debugMode = false)
         {
             if (IsCompleted())
             {
-                return false;
+                return LocationValidationStatus.Completed;
             }
-            if (!CheckIns.ContainsKey(userId) && ValidateLocation(userLocation))
+            if (!CheckIns.ContainsKey(userId) && ValidateLocation(userLocation) == LocationValidationStatus.Success)
             {
                 CheckIns[userId] = userLocation;
-                return true;
+                return LocationValidationStatus.Success;
             }
             else if (debugMode)
             {
                 Trace.TraceInformation("debug mode");
-                return true;
+                return LocationValidationStatus.Success;
             }
 
-            return false;
+            return LocationValidationStatus.WrongLocation;
         }
 
         public override bool IsCompleted()
@@ -212,7 +212,7 @@ namespace GameManager
 
         }
 
-        protected override bool ValidateLocation(Location userLocation, bool debugMode = false)
+        protected override LocationValidationStatus ValidateLocation(Location userLocation, bool debugMode = false)
         {
             var maxDistanceAllowed = 500;
             
@@ -224,10 +224,10 @@ namespace GameManager
 
             if (distanceInMeters <= maxDistanceAllowed)
             {                
-                return true;
+                return LocationValidationStatus.Success;
             }
             
-            return false;
+            return LocationValidationStatus.WrongLocation;
         }
     }
 
@@ -300,18 +300,18 @@ namespace GameManager
             LocationDescription = City;
         }
 
-        protected override bool ValidateLocation(Location userLocation, bool debugMode = false)
+        protected override LocationValidationStatus ValidateLocation(Location userLocation, bool debugMode = false)
         {
             //if location meets creteria
             var userCity = MissionController.GetCityByCoordinates(userLocation.Latitude, userLocation.Longitude);
             if (userCity.Equals(City, StringComparison.InvariantCultureIgnoreCase))
             {
                 Trace.TraceInformation("User city check-in was validated successfully");
-                return true;
+                return LocationValidationStatus.Success;
             }
 
             Trace.TraceInformation($"Expected city was: {City} while the user sent {userCity} location");
-            return false;
+            return LocationValidationStatus.WrongLocation;
         }
     }
 
@@ -388,5 +388,13 @@ namespace GameManager
         {
             throw new NotImplementedException();
         }
+    }
+
+    public enum LocationValidationStatus
+    {
+        Success,
+        UserAlreadyCheckedIn,
+        WrongLocation,
+        Completed
     }
 }

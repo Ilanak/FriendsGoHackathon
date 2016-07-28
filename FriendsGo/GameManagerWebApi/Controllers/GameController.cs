@@ -186,9 +186,9 @@ namespace GameManagerWebApi.Controllers
                     //var validationResult = mission.ValidateLocation(location.ToLocation(), userId, debugMode: true);
                     var validationResult = mission.ValidateLocation(location.ToLocation(), userId);
 
-                    if (validationResult)
+                    if (validationResult == LocationValidationStatus.Success)
                     {
-                        message += $"Successful check-in!"; ;
+                        message += $"Successful check-in!";
 
                         message += Environment.NewLine + mission.MissionStatus();
 
@@ -196,7 +196,8 @@ namespace GameManagerWebApi.Controllers
 
                         if (completeRsult)
                         {
-                            message += Environment.NewLine + "Mission completed!!!" + Environment.NewLine + " Type '/mission' to get your next mission!";
+                            message += Environment.NewLine + "Mission completed!!!" + Environment.NewLine +
+                                       " Type '/mission' to get your next mission!";
 
                             group.Level += 1;
                         }
@@ -204,6 +205,10 @@ namespace GameManagerWebApi.Controllers
                         await DocDbApi.UpdateGroup(group.TelegramId, group);
 
                         await _botClient.SendTextMessageAsync(groupId, message);
+                    }
+                    else
+                    {
+                        message += "Location not excepted, please try to get closer and checkin again";
                     }
                 }
             }
