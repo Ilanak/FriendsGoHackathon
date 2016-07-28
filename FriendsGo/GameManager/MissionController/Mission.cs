@@ -87,8 +87,10 @@ namespace GameManager
 
     public class SubMissionBase : SubMission
     {
+        public int CheckedInCount;
+
         private Dictionary<string, bool> checkIns;
-        private int _checkedInCount;
+        
         private int _numberOfPlayers;
         private int _checkInCycleDuration;
         private static System.Timers.Timer _timer;
@@ -96,7 +98,7 @@ namespace GameManager
         public SubMissionBase(int numPlayers, int checkInCycleDuration)
         {
             checkIns = new Dictionary<string, bool>();
-            _checkedInCount = 0;
+            CheckedInCount = 0;
             _numberOfPlayers = numPlayers;
             _checkInCycleDuration = checkInCycleDuration;
         }
@@ -111,7 +113,7 @@ namespace GameManager
         {
             _timer.Enabled = false;
             //message users that time for compliting check in is over - start again?
-            _checkedInCount = 0;
+            CheckedInCount = 0;
             checkIns.Clear();
         }
 
@@ -124,13 +126,13 @@ namespace GameManager
 //                _timer = new System.Timers.Timer();
 //                // Hook up the Elapsed event for the timer.
 //                _timer.Elapsed += new ElapsedEventHandler(OnTimedEvent);
-//                _timer.Interval = _checkedInCount * 1000 /*to seconds*/;
+//                _timer.Interval = CheckedInCount * 1000 /*to seconds*/;
 //                _timer.Enabled = true;
             }
             if (!checkIns.ContainsKey(userId) && ValidateLocation(userLocation))
             {
                 checkIns[userId] = true;
-                _checkedInCount ++;
+                CheckedInCount ++;
                 return true;
             }
             else if (debugMode)
@@ -144,7 +146,7 @@ namespace GameManager
 
         public override bool IsCompleted()
         {
-            if (_checkedInCount == _numberOfPlayers)
+            if (CheckedInCount == _numberOfPlayers)
             {
 //                _timer.Enabled = false;
                 return true;
@@ -158,6 +160,7 @@ namespace GameManager
     {
         public int NumberOfPlayers;
 
+
         public Location _exactLocation; 
         //for in process validation
         private int _checkedInCount;
@@ -167,7 +170,7 @@ namespace GameManager
 
         public TimeSpan Duration;
 
-        public ExactLocationSubMission() : base(0, 0)
+        public ExactLocationSubMission(int numberOfPlayers) : base(numberOfPlayers, 0)
         {
         }
 
@@ -344,9 +347,11 @@ namespace GameManager
         protected override SubMission Create(Type objectType, JObject jObject)
         {
             var type = jObject["SubType"].ToString();
+            var numberOfPlayers = jObject["NumberOfPlayers"].ToObject<int>();
+
             if (type == "1")
             {
-                return new ExactLocationSubMission();
+                return new ExactLocationSubMission(numberOfPlayers);
             }
             else if (type == "2")
             {
