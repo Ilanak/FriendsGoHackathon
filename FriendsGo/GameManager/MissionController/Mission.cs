@@ -121,7 +121,11 @@ namespace GameManager
 
         public override bool ValidateLocation(Location userLocation, string userId, bool debugMode = false)
         {
-            if (CheckIns.ContainsKey(userId) && ValidateLocation(userLocation))
+            if (IsCompleted())
+            {
+                return false;
+            }
+            if (!CheckIns.ContainsKey(userId) && ValidateLocation(userLocation))
             {
                 CheckIns[userId] = userLocation;
                 return true;

@@ -11,23 +11,22 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 base_url = 'https://friendsgowebapi.azurewebsites.net/api/Game/'
+#base_url = 'http://localhost:57466/api/Game/'
 
 def error(bot, update, error):
     logger.warn('Update "%s" caused error "%s"' % (update, error))
 
 def handleJoinCommand(bot, update):
     join = {"Name": update.message.from_user.name, "Id": update.message.from_user.id}
-    url = base_url+ str(abs(update.message.chat_id))+'/join'
+    url = base_url+ str((update.message.chat_id))+'/join'
     resp = requests.post(url, json=join)
-    if resp.status_code == 200:
-        bot.send_message(update.message.chat_id, str(resp.content))
-    else:
-        bot.send_message(update.message.chat_id, "Error")
+    if resp.status_code != 200:
+        bot.send_message(update.message.chat_id, "Status not 200")
 
 
 def handleStartGameCommand(bot, update):
     checkin = {}
-    url = base_url + str(abs(update.message.chat_id)) + '/go/'+ str(abs(update.message.from_user.id))
+    url = base_url + str((update.message.chat_id)) + '/go/'+ str((update.message.from_user.id))
     resp = requests.post(url, json=checkin)
 
     button = telegram.KeyboardButton("Share location", request_location=True)
@@ -36,16 +35,14 @@ def handleStartGameCommand(bot, update):
     bot.send_message(update.message.from_user.id, "Share your location", reply_markup=reply_markup)
 
 def handleChallengeCommand(bot, update):
-    url = base_url + str(abs(update.message.chat_id)) + '/mission'
+    url = base_url + str((update.message.chat_id)) + '/mission'
     resp = requests.get(url)
-    if resp.status_code == 200:
-        bot.send_message(update.message.chat_id, str(resp.content))
-    else:
-        bot.send_message(update.message.chat_id, "Error")
+    if resp.status_code != 200:
+        bot.send_message(update.message.chat_id, "Status not 200")
 
 def handleCheckinCommand(bot, update):
     checkin = {}
-    url = base_url + str(abs(update.message.chat_id)) + '/checkin/' + str(abs(update.message.from_user.id))
+    url = base_url + str((update.message.chat_id)) + '/checkin/' + str((update.message.from_user.id))
     resp = requests.post(url, json=checkin)
 
     button = telegram.KeyboardButton("Share location", request_location=True)
@@ -54,42 +51,39 @@ def handleCheckinCommand(bot, update):
     bot.send_message(update.message.from_user.id, "Share your location", reply_markup=reply_markup)
 
 def handleStatCommand(bot, update):
-    bot.send_message(update.message.chat_id, "Group status: you are on level XXX, Good job!")
-    #url = base_url + str(abs(update.message.chat_id)) + '/Stat'
-    #resp = requests.get(url)
-    #if resp.status_code == 200:
-    #   bot.send_message(update.message.chat_id, str(resp.content))
+    url = base_url + str(update.message.chat_id) + '/stat'
+    resp = requests.get(url)
+    if resp.status_code != 200:
+        bot.send_message(update.message.chat_id, "Status not 200")
 
-#task = {"summary": "Take out trash", "description": "" }
-#resp = requests.post('https://todolist.example.com/tasks/', json=task)
-
-#change to py string str(update.message.chat_id)
+def handleGlobStatCommand(bot, update):
+    url = base_url + str(update.message.chat_id) + '/globalStat'
+    resp = requests.get(url)
+    #if resp.status_code != 200:
+    #    bot.send_message(update.message.chat_id, "Error")
+    if resp.status_code != 200:
+        bot.send_message(update.message.chat_id, "Status not 200")
 
 
 def handleMyLocationCommand(bot, update):
-    user = str(abs(update.message.from_user.id))
+    user = str((update.message.from_user.id))
     latitude = str(update.message.location.latitude)
     longitude = str(update.message.location.longitude)
     location = {"UserId": user ,"Latitude": latitude, "Longitude": longitude}
     url = base_url + '/location'
     resp = requests.post(url, json=location)
 
-    if resp.status_code == 200:
-        bot.send_message(update.message.from_user.id, resp.content)
-
-        #bot.send_message(str(resp.content)
-        #jsonResp = resp.content
-        #bot.send_message(jsonResp["GroupId"], jsonResp["Message"])
-    else:
-        bot.send_message(update.message.chat_id, "Error")
+    if resp.status_code != 200:
+        bot.send_message(update.message.chat_id, "Status not 200")
 
 def main():
-    updater = Updater(token="269182723:AAG26YGMIwHaSi6oGQUdM2kABsdeMVNKSdA")
+    updater = Updater(token="269182723:AAFP1qBAcnfnY0g9HHkw0a4jR69DmroR4Gg")
     dp = updater.dispatcher
     dp.add_handler(CommandHandler("join", handleJoinCommand))
     dp.add_handler(CommandHandler("mission", handleChallengeCommand))
     dp.add_handler(CommandHandler("go", handleStartGameCommand))
     dp.add_handler(CommandHandler("stat", handleStatCommand))
+    dp.add_handler(CommandHandler("globalstat", handleGlobStatCommand))
     dp.add_handler(CommandHandler("checkin", handleCheckinCommand))
 
     dp.add_handler(MessageHandler([Filters.location], handleMyLocationCommand))
