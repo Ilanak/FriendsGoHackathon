@@ -212,16 +212,12 @@ namespace GameManagerWebApi.Controllers
         }
 
         [HttpGet]
-        [Route("globalStat")]
-        public HttpResponseMessage GlobalStat(string groupId)
+        [Route("{gameId}/globalStat")]
+        public async Task GlobalStat(string gameId)
         {
             var topGroups = DocDbApi.GetTopGroups();
             Trace.TraceInformation($"bot response: topGroups : {topGroups}");
-            return new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent(topGroups)
-            };
-            //return topGroups;
+            await _botClient.SendTextMessageAsync(gameId, topGroups);
         }
     }
 
