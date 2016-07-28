@@ -43,32 +43,32 @@ namespace GameManagerWebApi.Controllers
 
         [HttpPost]
         [Route("{gameId}/join")]
-        public async Task<string> Join(string gameId, [FromBody] TelegramUser user)
+        public HttpResponseMessage Join(string gameId, [FromBody] TelegramUser user)
         {
             var group = DocDbApi.GetGroupById(gameId);
 
             if (group == null)
             {
-                await DocDbApi.CreateGroup(new Group(gameId, null));
+                DocDbApi.CreateGroup(new Group(gameId, null));
             }
 
             var telegramUser = DocDbApi.GetUserById(user.Id);
 
             if (telegramUser == null)
             {
-                await DocDbApi.CreateUser(new BotUser(user.Id, user.Name));
+                DocDbApi.CreateUser(new BotUser(user.Id, user.Name));
             }
 
             if (DocDbApi.GetUserGroupById(user.Id, gameId) == null)
             {
-                await DocDbApi.AddUserGroups(user.Id, gameId);
+                DocDbApi.AddUserGroups(user.Id, gameId);
                 Trace.TraceInformation($"{user.Name} successfully joined FriendsGo group {gameId}!");
-                return $"{user.Name} successfully joined FriendsGo group {gameId}!";
+                return new HttpResponseMessage() {Content = new StringContent($"{user.Name} successfully joined FriendsGo group {gameId}!") };
             }
             else
             {
                 Trace.TraceInformation($"{user.Name} already joined {gameId}!");
-                return $"{user.Name} already joined {gameId}!";
+                return new HttpResponseMessage() { Content = new StringContent($"{user.Name} already joined {gameId}!") } ;
             }
         }
 

@@ -47,14 +47,14 @@ namespace UnitTests
         public void CreatUserTest()
         {
             BotUser usr = new BotUser(userId, userName);
-            DocDbUtils.DocDbApi.CreateUser(usr).Wait();
+            DocDbUtils.DocDbApi.CreateUser(usr);
         }
 
         [TestMethod]
         public void CreateGroupTest()
         {
             Group grp = new Group(groupId2, null);
-            DocDbUtils.DocDbApi.CreateGroup(grp).Wait();
+            DocDbUtils.DocDbApi.CreateGroup(grp);
         }
 
         [TestMethod]
@@ -101,7 +101,7 @@ namespace UnitTests
         [TestMethod]
         public void AddUserGroup()
         {
-            DocDbUtils.DocDbApi.AddUserGroups(userId, groupId).Wait();
+            DocDbUtils.DocDbApi.AddUserGroups(userId, groupId);
         }
 
         [TestMethod]

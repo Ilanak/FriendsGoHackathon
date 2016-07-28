@@ -167,15 +167,21 @@ namespace GameManager
 
             var response = GooglePlaces.NearBySearch.Query(placesRequest);
 
-            var location = response.Results.FirstOrDefault(l => l.Photos != null);
-            if (location != null)
+            if (response.Results.Count() > 0)
             {
+
+                int index = (new Random()).Next(0, response.Results.Count());
+                var location = response.Results.ElementAt(index);
+
                 ExactLocation = location.Geometry.Location;
 
-                Description = $"Your mission: {NumberOfPlayers} players have to checkin to {location.Name}. It is at {location.Vicinity}!";
+                Description =
+                    $"Your mission: {NumberOfPlayers} players have to checkin to {location.Name}. It is at {location.Vicinity}!";
+
+
+                Duration = TimeSpan.MaxValue;
             }
 
-            Duration = TimeSpan.MaxValue;
         }
 
         protected override bool ValidateLocation(Location userLocation, bool debugMode = false)

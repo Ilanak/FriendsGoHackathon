@@ -34,9 +34,9 @@ namespace DocDbUtils
         /// </summary>
         /// <param name="user"> new user </param>
         /// <returns>Task</returns>
-        public static async Task CreateUser(BotUser user)
+        public static void CreateUser(BotUser user)
         {
-            await CreateBotUserDocumentIfNotExistsAsync(DatabaseName, UsersCollectionName, user);
+            CreateBotUserDocumentIfNotExistsAsync(DatabaseName, UsersCollectionName, user);
         }
 
         public static void DeleteUser(string telemgramId)
@@ -77,9 +77,9 @@ namespace DocDbUtils
         /// </summary>
         /// <param name="group"> new group </param>
         /// <returns>Task</returns>
-        public static async Task CreateGroup(Group group)
+        public static void CreateGroup(Group group)
         {
-            await CreateGroupDocumentIfNotExistsAsync(DatabaseName, GroupsCollectionName, group);
+            CreateGroupDocumentIfNotExistsAsync(DatabaseName, GroupsCollectionName, group);
         }
 
         /// <summary>
@@ -111,7 +111,7 @@ namespace DocDbUtils
 
         #region UserGroupsApi
 
-        public static async Task AddUserGroups(string userId, string groupId)
+        public static void AddUserGroups(string userId, string groupId)
         {
             var user = GetUserById(userId);
             var group = GetGroupById(groupId);
@@ -121,7 +121,7 @@ namespace DocDbUtils
             }
 
             var userGroup = new UserGroup(userId: userId, groupId: groupId);
-            await CreateuserGroupDocumentIfNotExistsAsync(DatabaseName, UserGroupCollectionName, userGroup);
+            CreateuserGroupDocumentIfNotExistsAsync(DatabaseName, UserGroupCollectionName, userGroup);
         }
 
         /// <summary>
@@ -193,10 +193,10 @@ namespace DocDbUtils
         {
             return string.Format("{0}_{1}", userId, groupId);
         }
-        private static async void ReplaceEntity<T>(string databaseName, string collectionName, string telegramId, T updatedEntity)
+        private static async Task ReplaceEntity<T>(string databaseName, string collectionName, string telegramId, T updatedEntity)
         {
             var uri = UriFactory.CreateDocumentUri(databaseName, collectionName, telegramId);
-            var result = await client.ReplaceDocumentAsync(uri, updatedEntity);
+            await client.ReplaceDocumentAsync(uri, updatedEntity);
         }
 
         private static List<T> GetEntityById<T>(string databaseName, string collectionName, string entityTelegramId = null) where T : DocDbEntityBase
@@ -214,22 +214,14 @@ namespace DocDbUtils
                 query = client.CreateDocumentQuery<T>(
                 UriFactory.CreateDocumentCollectionUri(databaseName, collectionName), queryOptions); ;
             }
-            try
-            {
-                return query.ToList();
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
             return query.ToList();
         }
 
-        private static void DeleteDocument(string databaseName, string collectionName, string documentName)
+        private static async Task DeleteDocument(string databaseName, string collectionName, string documentName)
         {
             try
             {
-                client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(databaseName, collectionName, documentName)).Wait();
+                await client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(databaseName, collectionName, documentName));
                 Console.WriteLine("Deleted {0}", documentName);
             }
             catch (DocumentClientException de)
@@ -353,7 +345,7 @@ namespace DocDbUtils
         {
             try
             {
-                await client.ReadDocumentAsync(UriFactory.CreateDocumentUri(databaseName, collectionName, group.TelegramId));
+                 await client.ReadDocumentAsync(UriFactory.CreateDocumentUri(databaseName, collectionName, group.TelegramId));
             }
             catch (Exception de)
             {

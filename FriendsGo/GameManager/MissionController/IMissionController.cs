@@ -46,20 +46,20 @@ namespace GameManager
             //bool - flag add city - randomize a new city to add to game
             LevelsSettings = new Dictionary<int, MissionSettings>();
 
-            LevelsSettings[0] =     new MissionSettings(1, 1, 10,     600, false);
-            LevelsSettings[1] =     new MissionSettings(1, 2, 10,     600, false);
-            LevelsSettings[2] =     new MissionSettings(1, 2, 50,     600, false);
-            LevelsSettings[3] =     new MissionSettings(1, 3, 10,     600, false);
+            LevelsSettings[0] =     new MissionSettings(1, 1, 50,     600, false);
+            LevelsSettings[1] =     new MissionSettings(1, 2, 50,     600, false);
+            LevelsSettings[2] =     new MissionSettings(1, 2, 100,     600, false);
+            LevelsSettings[3] =     new MissionSettings(1, 3, 50,     600, false);
             LevelsSettings[4] =     new MissionSettings(1, 3, 100,    600, false);
-            LevelsSettings[5] =     new MissionSettings(2, 1, 10,     600, false);
+            LevelsSettings[5] =     new MissionSettings(2, 1, 50,     600, false);
             LevelsSettings[6] =     new MissionSettings(2, 1, 200,    600, false);
             LevelsSettings[7] =     new MissionSettings(2, 2, 100,    600, false);
             LevelsSettings[8] =     new MissionSettings(2, 2, 200,    600, false);
-            LevelsSettings[9] =     new MissionSettings(3, 1, 10,     600, true);
+            LevelsSettings[9] =     new MissionSettings(3, 1, 50,     600, true);
             LevelsSettings[10] =    new MissionSettings(3, 2, 100,     600, false);
             LevelsSettings[11] =    new MissionSettings(3, 2, 2000,    600, false);
             LevelsSettings[12] =    new MissionSettings(3, 2, 1000,    600, true);
-            LevelsSettings[13] =    new MissionSettings(3, 2, 10,      600, false);
+            LevelsSettings[13] =    new MissionSettings(3, 2, 50,      600, false);
             LevelsSettings[14] =    new MissionSettings(3, 2, 2000,      600, false);
             LevelsSettings[15] =    new MissionSettings(4, 2, 100,      600, true);
             LevelsSettings[16] =    new MissionSettings(4, 2, 1000,      600, false);
