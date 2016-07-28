@@ -129,7 +129,7 @@ namespace GameManagerWebApi.Controllers
                     mission = group.GetCurrentMission();
                 }
 
-                var message = $"Group {group.TelegramId} is on level {group.Level}. " + Environment.NewLine +
+                var message = $"You are on level {group.Level}. " + Environment.NewLine +
                               $"Your current missions are:" + Environment.NewLine +
                               $"{string.Join(Environment.NewLine, mission.SubMissions.Select(s => s.Description))}";
 
@@ -158,16 +158,18 @@ namespace GameManagerWebApi.Controllers
             }
             if (States[userId].Item2 == UserState.Go)
             {
-                Trace.TraceInformation($"user {userId} has go'ed the game");
+                var user = DocDbApi.GetUserById(userId);
+
+                message = $"{user.UserName} has go'ed the game! Get you first mission by typing '/mission'!";
+
+                Trace.TraceInformation(message);
                 var groupId = States[userId].Item1;
                 var group = DocDbApi.GetGroupById(groupId);
 
                 group.StartLocation = location.ToLocation();
 
                 await DocDbApi.UpdateGroup(group.TelegramId, group);
-
-                message = $"{userId} has GO'ed the game in {group.TelegramId} group!";
-
+                
                 await _botClient.SendTextMessageAsync(groupId, message);
             }
             else if (States[userId].Item2 == UserState.Checkin)
@@ -186,13 +188,15 @@ namespace GameManagerWebApi.Controllers
 
                     if (validationResult)
                     {
-                        message += $"Check-in successfull for game {States[userId].Item1}!"; ;
+                        message += $"Successful check-in!"; ;
+
+                        message += Environment.NewLine + mission.MissionStatus();
 
                         var completeRsult = mission.IsCompleted();
 
                         if (completeRsult)
                         {
-                            message += Environment.NewLine + "Mission completed!";
+                            message += Environment.NewLine + "Mission completed!!! Type '/mission' to get your next mission!";
 
                             group.Level += 1;
                         }

@@ -16,13 +16,11 @@ namespace GameManager
     
     public class Mission
     {
-        public List<Location> ValidatedLocations;
         public List<SubMission> SubMissions;
 
         public Mission()
         {
             SubMissions = new List<SubMission>();
-            ValidatedLocations = new List<Location>();
         }
 
 
@@ -32,10 +30,20 @@ namespace GameManager
             if (SubMissions.Any(subMission => subMission.ValidateLocation(loc, userId, debugMode)))
             {
                 validated = true;
-                ValidatedLocations.Add(loc);
             }
             return validated;
 
+        }
+        public string MissionStatus()
+        {
+            string message = String.Empty;
+
+            foreach (var subMission in SubMissions)
+            {
+                message += $"{subMission.LocationDescription}:  {subMission.CheckIns.Count()} / {subMission.NumberOfPlayers} checked in!";
+
+            }
+            return message;
         }
 
         public bool IsCompleted()
@@ -75,6 +83,7 @@ namespace GameManager
         protected const string ApiKey = "AIzaSyA5t84tAgn_fgRCXM1ROaOjcEfRiMG4AZ8";
 
         public string Description;
+        public string LocationDescription;
 
         public SubMissionType SubType;
 
@@ -149,38 +158,52 @@ namespace GameManager
         public ExactLocationSubMission(int level, Location startLocation, int numberCheckInRequired, int meterRadius, int checkInCycleDuration) : base(numberCheckInRequired, checkInCycleDuration)
         {
             SubType = SubMissionType.ExactLocation;
-            
-            var placesRequest = new PlacesNearBySearchRequest()
+
+            while (true)
             {
-                Key = ApiKey,
-                Sensor = true,
-                Language = "en",
-                Location = startLocation,
-                Radius = meterRadius,
-                Keyword = "*",
-                Types = new List<SearchPlaceType>()
+                var placesRequest = new PlacesNearBySearchRequest()
                 {
-                    SearchPlaceType.BAR, SearchPlaceType.FOOD, SearchPlaceType.CLOTHING_STORE, SearchPlaceType.RESTAURANT,
-                    SearchPlaceType.GYM, SearchPlaceType.CAFE, SearchPlaceType.UNIVERSITY, SearchPlaceType.SCHOOL, SearchPlaceType.MOVIE_THEATER
+                    Key = ApiKey,
+                    Sensor = true,
+                    Language = "en",
+                    Location = startLocation,
+                    Radius = meterRadius,
+                    Keyword = "*",
+                    Types = new List<SearchPlaceType>()
+                    {
+                        SearchPlaceType.BAR,
+                        SearchPlaceType.FOOD,
+                        SearchPlaceType.CLOTHING_STORE,
+                        SearchPlaceType.RESTAURANT,
+                        SearchPlaceType.GYM,
+                        SearchPlaceType.CAFE,
+                        SearchPlaceType.UNIVERSITY,
+                        SearchPlaceType.SCHOOL,
+                        SearchPlaceType.MOVIE_THEATER
+                    }
+                };
+
+                var response = GooglePlaces.NearBySearch.Query(placesRequest);
+
+                if (response.Results.Count() > 0)
+                {
+
+                    int index = (new Random()).Next(0, response.Results.Count());
+                    var location = response.Results.ElementAt(index);
+
+                    ExactLocation = location.Geometry.Location;
+
+                    Description =
+                        $"{NumberOfPlayers} player(s) need to checkin to {location.Name}. It is at {location.Vicinity}!";
+                    LocationDescription = location.Name;
+
+                    Duration = TimeSpan.MaxValue;
+
+                    return;
                 }
-            };
 
-            var response = GooglePlaces.NearBySearch.Query(placesRequest);
-
-            if (response.Results.Count() > 0)
-            {
-
-                int index = (new Random()).Next(0, response.Results.Count());
-                var location = response.Results.ElementAt(index);
-
-                ExactLocation = location.Geometry.Location;
-
-                Description =
-                    $"Your mission: {NumberOfPlayers} players have to checkin to {location.Name}. It is at {location.Vicinity}!";
-
-
-                Duration = TimeSpan.MaxValue;
-            }
+                meterRadius += 50;
+            } 
 
         }
 
@@ -269,6 +292,7 @@ namespace GameManager
             City = Cities[cityRand];
 
             Description = string.Format("Your mission: {0} players have to checkin to {1}!", NumberOfPlayers, City);
+            LocationDescription = City;
         }
 
         protected override bool ValidateLocation(Location userLocation, bool debugMode = false)
