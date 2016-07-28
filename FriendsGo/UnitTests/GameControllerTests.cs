@@ -17,13 +17,21 @@ namespace UnitTests
         public void MissionSerializationTest()
         {
             Mission m = new Mission();
-            m.SubMissions.Add(SubMissionsFactory.Create(SubMissionType.ExactLocation, 1, new Location(11, 12), 1, 20, 20));
 
+            var originalSubmission = SubMissionsFactory.Create(SubMissionType.ExactLocation, 5, new Location(11, 12), 7, 20, 50);
+            originalSubmission.Description = "1234  abcd";
+            originalSubmission.CheckIns["assaf"] = new Location(33, 44);
+
+            m.SubMissions.Add(originalSubmission);
+            
             string json = JsonConvert.SerializeObject(m, Formatting.Indented);
 
             m = JsonConvert.DeserializeObject<Mission>(json);
 
-            Assert.IsTrue(m.SubMissions.First() is ExactLocationSubMission);
+            var submission = m.SubMissions.First() as ExactLocationSubMission;
+
+
+            //Assert.AreEqual(submission, originalSubmission);
         }
 
     }

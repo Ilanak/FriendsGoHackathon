@@ -19,7 +19,7 @@ namespace Shared
             CreateDate = DateTime.UtcNow;
             StartLocation = location;
             Score = 0;
-            Level = 1;
+            Level = 0;
             GeneratedMissions = new Dictionary<int, Mission>();
         }
 

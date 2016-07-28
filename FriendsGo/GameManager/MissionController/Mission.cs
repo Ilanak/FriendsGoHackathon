@@ -82,55 +82,39 @@ namespace GameManager
 
         public abstract bool IsCompleted();
 
+        public Dictionary<string, Location> CheckIns;
+        public int NumberOfPlayers;
+        public int CheckInCycleDuration;
+        public TimeSpan Duration;
 
     }
 
     public class SubMissionBase : SubMission
     {
-        private Dictionary<string, bool> checkIns;
-        private int _checkedInCount;
-        private int _numberOfPlayers;
-        private int _checkInCycleDuration;
-        private static System.Timers.Timer _timer;
-
+       
+        public SubMissionBase()
+        {
+            
+        }
+        
         public SubMissionBase(int numPlayers, int checkInCycleDuration)
         {
-            checkIns = new Dictionary<string, bool>();
-            _checkedInCount = 0;
-            _numberOfPlayers = numPlayers;
-            _checkInCycleDuration = checkInCycleDuration;
+            CheckIns = new Dictionary<string, Location>();
+            NumberOfPlayers = numPlayers;
+            CheckInCycleDuration = checkInCycleDuration;
         }
 
         protected virtual bool ValidateLocation(Location userLocation, bool debugMode = false)
         {
             return true;
         }
-
-
-        private void OnTimedEvent(object source, ElapsedEventArgs e)
-        {
-            _timer.Enabled = false;
-            //message users that time for compliting check in is over - start again?
-            _checkedInCount = 0;
-            checkIns.Clear();
-        }
-
+        
 
         public override bool ValidateLocation(Location userLocation, string userId, bool debugMode = false)
         {
-            //if first cehck in set clock!
-            if (checkIns.Count == 0)
+            if (!CheckIns.ContainsKey(userId) && ValidateLocation(userLocation))
             {
-//                _timer = new System.Timers.Timer();
-//                // Hook up the Elapsed event for the timer.
-//                _timer.Elapsed += new ElapsedEventHandler(OnTimedEvent);
-//                _timer.Interval = _checkedInCount * 1000 /*to seconds*/;
-//                _timer.Enabled = true;
-            }
-            if (!checkIns.ContainsKey(userId) && ValidateLocation(userLocation))
-            {
-                checkIns[userId] = true;
-                _checkedInCount ++;
+                CheckIns[userId] = userLocation;
                 return true;
             }
             else if (debugMode)
@@ -144,9 +128,8 @@ namespace GameManager
 
         public override bool IsCompleted()
         {
-            if (_checkedInCount == _numberOfPlayers)
+            if (CheckIns.Count >= NumberOfPlayers)
             {
-//                _timer.Enabled = false;
                 return true;
             }
             return false;
@@ -156,28 +139,17 @@ namespace GameManager
 
     public class ExactLocationSubMission : SubMissionBase
     {
-        public int NumberOfPlayers;
-
-        public Location _exactLocation; 
-        //for in process validation
-        private int _checkedInCount;
-        private int _checkInCycleDuration;
-
         public Location ExactLocation;
-
-        public TimeSpan Duration;
-
-        public ExactLocationSubMission() : base(0, 0)
+        
+        
+        public ExactLocationSubMission()
         {
         }
 
         public ExactLocationSubMission(int level, Location startLocation, int numberCheckInRequired, int meterRadius, int checkInCycleDuration) : base(numberCheckInRequired, checkInCycleDuration)
         {
             SubType = SubMissionType.ExactLocation;
-            NumberOfPlayers = numberCheckInRequired;
-            _checkedInCount = 0;
-            _checkInCycleDuration = checkInCycleDuration;
-
+            
             var placesRequest = new PlacesNearBySearchRequest()
             {
                 Key = ApiKey,
@@ -198,7 +170,7 @@ namespace GameManager
             var location = response.Results.FirstOrDefault(l => l.Photos != null);
             if (location != null)
             {
-                _exactLocation = location.Geometry.Location;
+                ExactLocation = location.Geometry.Location;
 
                 Description = $"Your mission: {NumberOfPlayers} players have to checkin to {location.Name}. It is at {location.Vicinity}!";
             }
@@ -209,23 +181,18 @@ namespace GameManager
         protected override bool ValidateLocation(Location userLocation, bool debugMode = false)
         {
             var maxDistanceAllowed = 500;
+            
             //if location meets creteria
-            var distanceInMeters = DistanceAlgorithm.DistanceBetweenPlacesInMeters(userLocation, _exactLocation);
+            var distanceInMeters = DistanceAlgorithm.DistanceBetweenPlacesInMeters(userLocation, ExactLocation);
 
             Trace.TraceInformation($"ValidateLocation of exact location sub mission. distance between user location and" +
                                    $"expected location is {distanceInMeters}");
 
             if (distanceInMeters <= maxDistanceAllowed)
-            {
-                _checkedInCount++;
+            {                
                 return true;
             }
-            else if (debugMode)
-            {
-                Trace.TraceInformation("debug mode");
-                return true;
-            }
-
+            
             return false;
         }
     }
@@ -274,12 +241,7 @@ namespace GameManager
 
     public class CityLocationSubMission : SubMissionBase
     {
-        public int NumberOfPlayers;
-
-        //for in process validation
-        private int _checkedInCount;
-        private int _checkInCycleDuration;
-        private string _city;
+        public string City;
 
         private  List<string> Cities = new List<string>() {"Haifa", "Jerusalem", "BeerSheva"};
 
@@ -287,7 +249,7 @@ namespace GameManager
 
         public TimeSpan Duration;
 
-        public CityLocationSubMission() : base(0,0)
+        public CityLocationSubMission() 
         {
         }
 
@@ -295,38 +257,25 @@ namespace GameManager
             int checkInCycleDuration) : base (numberCheckInRequired, checkInCycleDuration)
         {
             SubType = SubMissionType.CityLocation;
-            NumberOfPlayers = numberCheckInRequired;
-            _checkedInCount = 0;
-            _checkInCycleDuration = checkInCycleDuration;
-
+            
             Random rand = new Random();
             int cityRand = rand.Next(0, Cities.Count - 1);
-            _city = Cities[cityRand];
+            City = Cities[cityRand];
 
-            Description = string.Format("Your mission: {0} players have to checkin to {1}!",
-                NumberOfPlayers, _city);
-
-
+            Description = string.Format("Your mission: {0} players have to checkin to {1}!", NumberOfPlayers, City);
         }
 
         protected override bool ValidateLocation(Location userLocation, bool debugMode = false)
         {
             //if location meets creteria
             var userCity = MissionController.GetCityByCoordinates(userLocation.Latitude, userLocation.Longitude);
-            if (userCity.Equals(_city, StringComparison.InvariantCultureIgnoreCase))
+            if (userCity.Equals(City, StringComparison.InvariantCultureIgnoreCase))
             {
                 Trace.TraceInformation("User city check-in was validated successfully");
-                _checkedInCount++;
-                return true;
-            }
-            else if (debugMode)
-            {
-                Trace.TraceInformation("debug mode");
                 return true;
             }
 
-
-            Trace.TraceInformation($"Expected city was: {_city} while the user sent {userCity} location");
+            Trace.TraceInformation($"Expected city was: {City} while the user sent {userCity} location");
             return false;
         }
     }
@@ -344,6 +293,8 @@ namespace GameManager
         protected override SubMission Create(Type objectType, JObject jObject)
         {
             var type = jObject["SubType"].ToString();
+            //var numberOfPlayers = jObject["NumberOfPlayers"].ToObject<int>();
+
             if (type == "1")
             {
                 return new ExactLocationSubMission();
