@@ -12,13 +12,15 @@ using DocDbUtils;
 using GameManager;
 using GoogleApi.Entities.Common;
 using Shared;
+using Telegram.Bot;
 
 namespace GameManagerWebApi.Controllers
 {
 
     [RoutePrefix("api/game")]
-    public class GameController : ApiController 
+    public class GameController : ApiController
     {
+        private readonly TelegramBotClient _botClient;
 
         public enum UserState
         {
@@ -31,6 +33,11 @@ namespace GameManagerWebApi.Controllers
         public static ConcurrentDictionary<string, Tuple<string, UserState>> States = new ConcurrentDictionary<string, Tuple<string, UserState>>();
 
         public static MissionController MissionController = new MissionController();
+
+        public GameController()
+        {
+            _botClient = new TelegramBotClient("269182723:AAFP1qBAcnfnY0g9HHkw0a4jR69DmroR4Gg");
+        }
 
         [HttpPost]
         [Route("{gameId}/go/{userId}")]
@@ -199,22 +206,18 @@ namespace GameManagerWebApi.Controllers
 
         [HttpGet]
         [Route("{gameId}/stat")]
-        public void Stat(string groupId)
+        public async Task Stat(string gameId)
         {
-            throw new NotImplementedException();
+            await _botClient.SendTextMessageAsync(gameId, "Hello test");
         }
 
         [HttpGet]
-        [Route("globalStat")]
-        public HttpResponseMessage GlobalStat(string groupId)
+        [Route("{gameId}/globalStat")]
+        public async Task GlobalStat(string gameId)
         {
             var topGroups = DocDbApi.GetTopGroups();
             Trace.TraceInformation($"bot response: topGroups : {topGroups}");
-            return new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent(topGroups)
-            };
-            //return topGroups;
+            await _botClient.SendTextMessageAsync(gameId, topGroups);
         }
     }
 
