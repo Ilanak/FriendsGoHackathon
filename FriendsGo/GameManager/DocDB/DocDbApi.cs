@@ -34,14 +34,14 @@ namespace DocDbUtils
         /// </summary>
         /// <param name="user"> new user </param>
         /// <returns>Task</returns>
-        public static void CreateUser(BotUser user)
+        public static async Task CreateUser(BotUser user)
         {
-            CreateBotUserDocumentIfNotExistsAsync(DatabaseName, UsersCollectionName, user);
+            await CreateBotUserDocumentIfNotExistsAsync(DatabaseName, UsersCollectionName, user);
         }
 
-        public static void DeleteUser(string telemgramId)
+        public static async Task DeleteUser(string telemgramId)
         {
-            DeleteDocument(DatabaseName, UsersCollectionName, telemgramId);
+            await DeleteDocument(DatabaseName, UsersCollectionName, telemgramId);
         }
 
         /// <summary>
@@ -77,9 +77,9 @@ namespace DocDbUtils
         /// </summary>
         /// <param name="group"> new group </param>
         /// <returns>Task</returns>
-        public static void CreateGroup(Group group)
+        public static async Task CreateGroup(Group group)
         {
-            CreateGroupDocumentIfNotExistsAsync(DatabaseName, GroupsCollectionName, group);
+            await CreateGroupDocumentIfNotExistsAsync(DatabaseName, GroupsCollectionName, group);
         }
 
         /// <summary>
@@ -97,21 +97,21 @@ namespace DocDbUtils
             return GetEntityById<Group>(DatabaseName, GroupsCollectionName);
         }
 
-        public static void UpdateGroup(string telegramId, Group newGroup)
+        public static async Task UpdateGroup(string telegramId, Group newGroup)
         {
-            ReplaceEntity(DatabaseName, GroupsCollectionName, telegramId, newGroup);
+            await ReplaceEntity(DatabaseName, GroupsCollectionName, telegramId, newGroup);
         }
 
-        public static void DeleteGroup(string telemgramId)
+        public static async Task  DeleteGroup(string telemgramId)
         {
-            DeleteDocument(DatabaseName, GroupsCollectionName, telemgramId);
+            await DeleteDocument(DatabaseName, GroupsCollectionName, telemgramId);
         }
 
         #endregion
 
         #region UserGroupsApi
 
-        public static void AddUserGroups(string userId, string groupId)
+        public static async Task AddUserGroups(string userId, string groupId)
         {
             var user = GetUserById(userId);
             var group = GetGroupById(groupId);
@@ -121,7 +121,7 @@ namespace DocDbUtils
             }
 
             var userGroup = new UserGroup(userId: userId, groupId: groupId);
-            CreateuserGroupDocumentIfNotExistsAsync(DatabaseName, UserGroupCollectionName, userGroup);
+            await CreateuserGroupDocumentIfNotExistsAsync(DatabaseName, UserGroupCollectionName, userGroup);
         }
 
         /// <summary>

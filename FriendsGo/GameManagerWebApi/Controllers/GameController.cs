@@ -50,25 +50,25 @@ namespace GameManagerWebApi.Controllers
 
         [HttpPost]
         [Route("{gameId}/join")]
-        public HttpResponseMessage Join(string gameId, [FromBody] TelegramUser user)
+        public async Task<HttpResponseMessage> Join(string gameId, [FromBody] TelegramUser user)
         {
             var group = DocDbApi.GetGroupById(gameId);
 
             if (group == null)
             {
-                DocDbApi.CreateGroup(new Group(gameId, null));
+                await DocDbApi.CreateGroup(new Group(gameId, null));
             }
 
             var telegramUser = DocDbApi.GetUserById(user.Id);
 
             if (telegramUser == null)
             {
-                DocDbApi.CreateUser(new BotUser(user.Id, user.Name));
+                await DocDbApi.CreateUser(new BotUser(user.Id, user.Name));
             }
 
             if (DocDbApi.GetUserGroupById(user.Id, gameId) == null)
             {
-                DocDbApi.AddUserGroups(user.Id, gameId);
+                await DocDbApi.AddUserGroups(user.Id, gameId);
                 Trace.TraceInformation($"{user.Name} successfully joined FriendsGo group {gameId}!");
                 return new HttpResponseMessage() {Content = new StringContent($"{user.Name} successfully joined FriendsGo group {gameId}!") };
             }
@@ -98,7 +98,7 @@ namespace GameManagerWebApi.Controllers
 
         [HttpGet]
         [Route("{gameId}/mission")]
-        public HttpResponseMessage GetMission(string gameId)
+        public async Task<HttpResponseMessage> GetMission(string gameId)
         {
             var group = DocDbApi.GetGroupById(gameId);
 
@@ -112,7 +112,7 @@ namespace GameManagerWebApi.Controllers
 
                     group.GeneratedMissions[group.Level] = mission;
 
-                    DocDbApi.UpdateGroup(group.TelegramId, group);
+                    await DocDbApi.UpdateGroup(group.TelegramId, group);
                 }
                 else
                 {
@@ -132,7 +132,7 @@ namespace GameManagerWebApi.Controllers
 
         [HttpPost]
         [Route("location")]
-        public HttpResponseMessage Location([FromBody] UserLocation location)
+        public async Task<HttpResponseMessage> Location([FromBody] UserLocation location)
         {
             Trace.TraceInformation("Location request");
             string message = string.Empty;
@@ -151,7 +151,7 @@ namespace GameManagerWebApi.Controllers
 
                 group.StartLocation = location.ToLocation();
 
-                DocDbApi.UpdateGroup(group.TelegramId, group);
+                await DocDbApi.UpdateGroup(group.TelegramId, group);
 
                 message = $"{userId} has GO'ed the game in {group.TelegramId} group!";
             }
@@ -182,7 +182,7 @@ namespace GameManagerWebApi.Controllers
                             group.Level += 1;
                         }
 
-                        DocDbApi.UpdateGroup(group.TelegramId, group);
+                        await DocDbApi.UpdateGroup(group.TelegramId, group);
 
                     }
                 }
