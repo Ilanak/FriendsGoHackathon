@@ -100,7 +100,8 @@ namespace GameManager
 
     public class SubMissionBase : SubMission
     {
-       
+        protected  static Random rand = new Random(); 
+
         public SubMissionBase()
         {
             
@@ -153,8 +154,8 @@ namespace GameManager
     public class ExactLocationSubMission : SubMissionBase
     {
         public Location ExactLocation;
-        
-        
+
+
         public ExactLocationSubMission()
         {
         }
@@ -162,7 +163,7 @@ namespace GameManager
         public ExactLocationSubMission(int level, Location startLocation, int numberCheckInRequired, int meterRadius, int checkInCycleDuration) : base(numberCheckInRequired, checkInCycleDuration)
         {
             SubType = SubMissionType.ExactLocation;
-
+           
             while (true)
             {
                 var placesRequest = new PlacesNearBySearchRequest()
@@ -192,7 +193,7 @@ namespace GameManager
                 if (response.Results.Count() > 0)
                 {
 
-                    int index = (new Random()).Next(0, response.Results.Count());
+                    int index = (rand.Next(0, response.Results.Count()));
                     var location = response.Results.ElementAt(index);
 
                     ExactLocation = location.Geometry.Location;
